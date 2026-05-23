@@ -1,4 +1,4 @@
-export const k_e = 8.99e9 // N·m²/C²
+export const k_e = 8.99e9
 
 export interface Vec3 {
   x: number
@@ -82,7 +82,9 @@ export function traceFieldLine(
   charges: ChargeData[],
   startPos: Vec3,
   maxSteps = 200,
-  stepSize = 0.05
+  stepSize = 0.05,
+  terminationDist = 0.05,
+  isForward = true
 ): Vec3[] {
   const line: Vec3[] = [startPos]
   let currentPos = { ...startPos }
@@ -92,25 +94,26 @@ export function traceFieldLine(
     const Emag = magVec(E)
     if (Emag < 1e-6) break
 
-    // Direction of the field
-    const dir = normVec(E)
+    let dir = normVec(E)
+    if (!isForward) {
+      dir = scaleVec(dir, -1)
+    }
     
-    // Step forward
     currentPos = addVec(currentPos, scaleVec(dir, stepSize))
     line.push({ ...currentPos })
 
-    // Stop if we get too close to any charge (sink)
     let tooClose = false
     for (const c of charges) {
       const dist = magVec(subVec(currentPos, { x: c.x, y: c.y, z: c.z }))
-      if (dist < 0.1) {
-        tooClose = true
-        break
+      if (dist < terminationDist) {
+        if (i > 5) {
+          tooClose = true
+          break
+        }
       }
     }
     if (tooClose) break
     
-    // Stop if we go way out of bounds
     if (magVec(currentPos) > 10) break
   }
 

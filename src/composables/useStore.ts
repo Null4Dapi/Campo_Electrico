@@ -16,6 +16,13 @@ export interface SolvePoint {
   z: number
 }
 
+export interface FocusTarget {
+  x: number
+  y: number
+  z: number
+  type: 'charge' | 'pointP' | 'origin'
+}
+
 interface AppState {
   charges: Charge[]
   chargeCounter: number
@@ -24,6 +31,7 @@ interface AppState {
   showVectors: boolean
   showPotential: boolean
   solvePoint: SolvePoint | null
+  focusTarget: FocusTarget | null
 }
 
 const state = reactive<AppState>({
@@ -34,11 +42,12 @@ const state = reactive<AppState>({
   showVectors: true,
   showPotential: false,
   solvePoint: null,
+  focusTarget: null,
 })
 
 export function useStore() {
   function addCharge(q_nC: number, x: number, y: number, z: number) {
-    state.charges.push({ id: state.chargeCounter++, q_nC, x, y, z })
+    state.charges.push({ id: state.chargeCounter++, q_nC, x, y, z: 0 })
   }
 
   function removeCharge(id: number) {
@@ -65,5 +74,12 @@ export function useStore() {
     }
   }
 
-  return { state, addCharge, removeCharge, loadPreset }
+  function setProblem(charges: { q_nC: number; x: number; y: number; z: number }[], solvePoint: SolvePoint | null) {
+    state.charges = []
+    state.chargeCounter = 0
+    state.charges = charges.map((c) => ({ id: state.chargeCounter++, q_nC: c.q_nC, x: c.x, y: c.y, z: 0 }))
+    state.solvePoint = solvePoint ? { x: solvePoint.x, y: solvePoint.y, z: 0 } : null
+  }
+
+  return { state, addCharge, removeCharge, loadPreset, setProblem }
 }

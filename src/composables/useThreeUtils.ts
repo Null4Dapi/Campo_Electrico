@@ -3,7 +3,7 @@ import * as THREE from 'three'
 /**
  * Creates a starfield for the "space" look.
  */
-export function createStarfield(count = 2000, radius = 50) {
+export function createStarfield(count = 2000, radius = 500) { // Increased radius for mm scale
   const geometry = new THREE.BufferGeometry()
   const positions = new Float32Array(count * 3)
   const colors = new Float32Array(count * 3)
@@ -27,10 +27,10 @@ export function createStarfield(count = 2000, radius = 50) {
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
 
   const material = new THREE.PointsMaterial({
-    size: 0.1,
+    size: 0.5, // Larger stars for mm scale
     vertexColors: true,
     transparent: true,
-    opacity: 0.8,
+    opacity: 0.6,
   })
 
   return new THREE.Points(geometry, material)
@@ -52,11 +52,42 @@ export function createLabel(text: string, position: THREE.Vector3, color = '#9ca
   ctx.fillText(text, size / 2, size / 2)
 
   const texture = new THREE.CanvasTexture(canvas)
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.5 })
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.6 })
   const sprite = new THREE.Sprite(material)
   
   sprite.position.copy(position)
-  sprite.scale.set(0.08, 0.08, 1)
+  sprite.scale.set(1.5, 1.5, 1) // Scaled up for mm units
+  
+  return sprite
+}
+
+/**
+ * Creates a wide label that adjusts its width based on text length.
+ */
+export function createWideLabel(text: string, position: THREE.Vector3, color = '#9ca3af') {
+  const canvas = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')!
+  
+  ctx.font = 'Bold 40px Arial'
+  const metrics = ctx.measureText(text)
+  const textWidth = Math.ceil(metrics.width) + 40
+  const height = 64
+  
+  canvas.width = textWidth
+  canvas.height = height
+  
+  ctx.font = 'Bold 40px Arial'
+  ctx.fillStyle = color
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(text, textWidth / 2, height / 2)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.8 })
+  const sprite = new THREE.Sprite(material)
+  
+  sprite.position.copy(position)
+  sprite.scale.set(1.5 * (textWidth / height), 1.5, 1) 
   
   return sprite
 }
@@ -64,24 +95,25 @@ export function createLabel(text: string, position: THREE.Vector3, color = '#9ca
 /**
  * Creates labeled axes for the Cartesian plane.
  */
-export function createLabeledAxes(extent = 3, step = 1) {
+export function createLabeledAxes(extent = 50, step = 10, unitStr = 'mm', scaleFactor = 1) { // Extent in mm
   const group = new THREE.Group()
   
-  // Axes lines (Red: X, Green: Y, Blue: Z) - slightly transparent
-  const axesHelper = new THREE.AxesHelper(extent + 0.5)
-  axesHelper.renderOrder = -1 // Render behind other things
+  const axesHelper = new THREE.AxesHelper(extent + (extent * 0.1))
+  axesHelper.renderOrder = -1
   group.add(axesHelper)
 
-  // Helper to add ticks and numbers
+  const tickLen = Math.max(0.8, extent * 0.015)
+  const offset = Math.max(2.5, extent * 0.05)
+  const lblScale = Math.max(1.0, extent * 0.02)
+  const axisLabelScale = Math.max(1.5, extent * 0.03)
+
   const addTicks = (axis: 'x' | 'y' | 'z', color: string) => {
     for (let i = -extent; i <= extent; i += step) {
-      if (Math.abs(i) < 0.1) continue // Skip origin
+      if (Math.abs(i) < 0.1) continue
       
       const pos = new THREE.Vector3()
       pos[axis] = i
       
-      // Tick line
-      const tickLen = 0.04
       const p1 = pos.clone()
       const p2 = pos.clone()
       if (axis === 'x') p2.y += tickLen
@@ -92,26 +124,32 @@ export function createLabeledAxes(extent = 3, step = 1) {
       const lineMat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.4 })
       group.add(new THREE.Line(lineGeo, lineMat))
       
-      // Label (show in cm, smaller and closer)
-      const labelText = (i * 100).toFixed(0)
+      const val = i / scaleFactor
+      const labelText = Number.isInteger(val) ? val.toFixed(0) : val.toFixed(1)
       const labelPos = pos.clone()
-      const offset = 0.12
       if (axis === 'x') labelPos.y -= offset
       if (axis === 'y') labelPos.x -= offset
       if (axis === 'z') { labelPos.x += offset; labelPos.y += offset }
       
-      group.add(createLabel(labelText, labelPos, color))
+      const lbl = createLabel(labelText, labelPos, color)
+      lbl.scale.set(lblScale, lblScale, 1)
+      group.add(lbl)
     }
   }
 
-  addTicks('x', '#ef4444') // Red-ish
-  addTicks('y', '#22c55e') // Green-ish
-  addTicks('z', '#3b82f6') // Blue-ish
+  addTicks('x', '#ef4444')
+  addTicks('y', '#22c55e')
+  addTicks('z', '#3b82f6')
   
-  // Axis labels
-  group.add(createLabel('X (cm)', new THREE.Vector3(extent + 0.8, 0, 0), '#ef4444'))
-  group.add(createLabel('Y (cm)', new THREE.Vector3(0, extent + 0.8, 0), '#22c55e'))
-  group.add(createLabel('Z (cm)', new THREE.Vector3(0, 0, extent + 0.8), '#3b82f6'))
+  const makeAxisLabel = (text: string, pos: THREE.Vector3, color: string) => {
+    const lbl = createLabel(text, pos, color)
+    lbl.scale.set(axisLabelScale, axisLabelScale, 1)
+    return lbl
+  }
+
+  group.add(makeAxisLabel(`X (${unitStr})`, new THREE.Vector3(extent + extent*0.15, 0, 0), '#ef4444'))
+  group.add(makeAxisLabel(`Y (${unitStr})`, new THREE.Vector3(0, extent + extent*0.15, 0), '#22c55e'))
+  group.add(makeAxisLabel(`Z (${unitStr})`, new THREE.Vector3(0, 0, extent + extent*0.15), '#3b82f6'))
 
   return group
 }
@@ -123,24 +161,23 @@ export function createGlowingCharge(isPos: boolean, radius: number) {
   const group = new THREE.Group()
   const color = isPos ? 0xef4444 : 0x3b82f6
   
-  // Core sphere
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(radius, 28, 28),
     new THREE.MeshPhongMaterial({ 
       color, 
       emissive: color, 
       emissiveIntensity: 0.5,
-      shininess: 100 
+      shininess: 100,
+      transparent: true,
+      opacity: 0.7
     })
   )
   group.add(sphere)
 
-  // Sign Label (+ or -)
   const signLabel = createLabel(isPos ? '+' : '-', new THREE.Vector3(0, 0, 0), '#ffffff', 128)
   signLabel.scale.set(radius * 1.5, radius * 1.5, 1)
   group.add(signLabel)
 
-  // Outer glow sprite
   const canvas = document.createElement('canvas')
   canvas.width = 64; canvas.height = 64
   const ctx = canvas.getContext('2d')!

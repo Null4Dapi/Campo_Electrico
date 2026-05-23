@@ -1,9 +1,6 @@
-# Claude Code y herramientas locales
 .claude/
 .playwright-mcp/
 graphify-out/
-
-# Logs
 logs
 *.log
 npm-debug.log*
@@ -17,7 +14,6 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -27,3 +23,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.env
+.env.local
+.env.*.local
+backend/.env
+backend/venv/
+backend/.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+
+
+.antigravitycli

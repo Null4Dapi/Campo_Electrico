@@ -7,6 +7,13 @@ export default defineConfig({
   server: {
     allowedHosts: [
       '.trycloudflare.com'  // Acepta todos los .trycloudflare.com
-    ]
+    ],
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 })

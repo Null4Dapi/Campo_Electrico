@@ -2,42 +2,22 @@
 import LeftPanel  from '../components/LeftPanel.vue'
 import ThreeScene from '../components/ThreeScene.vue'
 import RightPanel from '../components/RightPanel.vue'
-
-defineEmits<{ back: [] }>()
 </script>
 
 <template>
-  <div class="layout">
-    <LeftPanel />
+  <main class="layout-container">
     <ThreeScene />
+    <LeftPanel />
     <RightPanel />
-    <button class="btn-back" @click="$emit('back')">← Módulos</button>
-  </div>
+  </main>
 </template>
 
 <style scoped>
-.layout {
-  display: flex;
+.layout-container {
+  position: relative;
+  width: 100vw;
   height: 100vh;
   overflow: hidden;
-  width: 100%;
-  position: relative;
+  background-color: #020617; /* slate-950 de base */
 }
-
-.btn-back {
-  position: absolute;
-  top: 10px;
-  /* sitúa el botón sobre la escena, a la derecha del panel izquierdo */
-  left: 282px;
-  z-index: 20;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid #374151;
-  color: #9ca3af;
-  padding: 4px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 11px;
-  transition: color 0.15s;
-}
-.btn-back:hover { color: #e2e8f0; }
 </style>
