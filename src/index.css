@@ -44,12 +44,11 @@
 
   body {
     background-color: transparent; /* Delegamos el color a App.tsx */
-    font-family: ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
     margin: 0;
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-serif;
   }
 
   /* Scrollbar Minimalista Moderno (Claro por defecto) */
