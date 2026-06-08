@@ -101,3 +101,6 @@ local.env
 *.p12
 *.jks
 *.snk
+
+.vercel
+.env*

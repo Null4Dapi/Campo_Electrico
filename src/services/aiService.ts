@@ -1,9 +1,7 @@
 import { useSimulatorStore } from '../store/useSimulatorStore';
 import type { ChatMessage } from './supabaseClient';
 
-const OLLAMA_API_URL = import.meta.env.VITE_OLLAMA_API_URL ?? '';
-const OLLAMA_MODEL = import.meta.env.VITE_OLLAMA_MODEL ?? 'gemma4:31b';
-const OLLAMA_API_KEY = import.meta.env.VITE_OLLAMA_API_KEY ?? '';
+const PROXY_URL = '/api/chat';
 const AI_TIMEOUT_MS = 60_000; // 60 segundos de timeout para la respuesta de IA
 
 const SYSTEM_INSTRUCTION = `Eres un asistente experto en física y electromagnetismo. Tu tarea es ayudar al usuario a comprender los campos eléctricos y a interactuar con el simulador 3D.
@@ -122,9 +120,7 @@ export const aiService = {
         return localResponse;
       }
 
-      if (!OLLAMA_API_URL) {
-        return 'El servidor de IA no está configurado. Puedes seguir usando los comandos rápidos del simulador; para preguntas abiertas, inicia Ollama y define VITE_OLLAMA_API_URL en el archivo .env.';
-      }
+      // El servidor de Vercel maneja la URL real y la API key de forma segura.
 
       // Estructurar el historial de conversación para la API de Ollama
       const messages = [
@@ -135,26 +131,14 @@ export const aiService = {
         }))
       ];
 
-      const cleanBaseUrl = OLLAMA_API_URL.replace(/\/$/, '');
-      const url = cleanBaseUrl.endsWith('/api') ? `${cleanBaseUrl}/chat` : `${cleanBaseUrl}/api/chat`;
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
-      };
-
-      if (OLLAMA_API_KEY) {
-        headers['Authorization'] = `Bearer ${OLLAMA_API_KEY}`;
-      }
-
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
 
-      const response = await fetch(url, {
+      const response = await fetch(PROXY_URL, {
         method: 'POST',
-        headers: headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: OLLAMA_MODEL,
-          messages: messages,
+          messages,
           stream: false
         }),
         signal: controller.signal
@@ -182,7 +166,7 @@ export const aiService = {
 
     } catch (error: unknown) {
       console.error('Error calling Ollama API:', error);
-      return `No se pudo conectar con Ollama en \`${OLLAMA_API_URL}\` usando el modelo \`${OLLAMA_MODEL}\`. El simulador sigue funcionando; inicia el servidor de IA para preguntas abiertas o usa los comandos rápidos locales.`;
+      return 'No se pudo conectar con el asistente de IA. El simulador sigue funcionando; usa los comandos rápidos locales si la IA no está disponible.';
     }
   },
 

@@ -10,13 +10,6 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 4173,
     strictPort: true,
-    allowedHosts: true,
-    proxy: {
-      '/ollama-api': {
-        target: 'https://ollama.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/ollama-api/, '')
-      }
-    }
+    allowedHosts: true
   }
 })
