@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useThree } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
@@ -11,8 +11,12 @@ interface ChargeProps {
 }
 
 const intersection = new Vector3();
+const xyPlane = new Plane();
+const xzPlane = new Plane();
+const planeNormalXY = new Vector3(0, 0, 1);
+const planeNormalXZ = new Vector3(0, 1, 0);
 
-export function Charge({ charge }: ChargeProps) {
+export const Charge = memo(function Charge({ charge }: ChargeProps) {
   const updateCharge = useSimulatorStore((state) => state.updateCharge);
   const setIsDraggingGlobal = useSimulatorStore((state) => state.setIsDragging);
   const selectedChargeId = useSimulatorStore((state) => state.selectedChargeId);
@@ -59,7 +63,7 @@ export function Charge({ charge }: ChargeProps) {
 
       if (e.shiftKey) {
         // Mover en el plano XY (manteniendo Z constante)
-        const xyPlane = new Plane(new Vector3(0, 0, 1), -charge.position[2]);
+        xyPlane.setFromNormalAndCoplanarPoint(planeNormalXY, new Vector3(0, 0, charge.position[2]));
         const res = e.ray.intersectPlane(xyPlane, intersection);
         if (res) {
           x = intersection.x;
@@ -67,8 +71,8 @@ export function Charge({ charge }: ChargeProps) {
         }
       } else {
         // Mover en el plano XZ (manteniendo Y constante)
-        const xzPlaneDynamic = new Plane(new Vector3(0, 1, 0), -charge.position[1]);
-        const res = e.ray.intersectPlane(xzPlaneDynamic, intersection);
+        xzPlane.setFromNormalAndCoplanarPoint(planeNormalXZ, new Vector3(0, charge.position[1], 0));
+        const res = e.ray.intersectPlane(xzPlane, intersection);
         if (res) {
           x = intersection.x;
           z = intersection.z;
@@ -107,4 +111,4 @@ export function Charge({ charge }: ChargeProps) {
       </mesh>
     </group>
   );
-}
+});

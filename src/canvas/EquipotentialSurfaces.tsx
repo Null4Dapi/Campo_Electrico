@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { DoubleSide } from 'three';
 import { useSimulatorStore } from '../store/useSimulatorStore';
 import FieldWorker from '../physics/fieldWorker?worker';
 
-export function EquipotentialSurfaces() {
+export const EquipotentialSurfaces = memo(function EquipotentialSurfaces() {
   const charges = useSimulatorStore((state) => state.charges);
   const showEquipotential = useSimulatorStore((state) => state.showEquipotential);
   const isDragging = useSimulatorStore((state) => state.isDragging);
@@ -130,4 +130,4 @@ export function EquipotentialSurfaces() {
       />
     </mesh>
   );
-}
+});

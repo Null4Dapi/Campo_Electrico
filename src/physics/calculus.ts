@@ -24,7 +24,7 @@ export function calculateElectricField(
     
     // Softening: r² + ε² para evitar división por cero catastrófica
     const r2 = dx * dx + dy * dy + dz * dz + SOFTENING;
-    const r3 = Math.pow(r2, 1.5);
+    const r3 = r2 * Math.sqrt(r2);
     const factor = (ke * q) / r3;
     
     Ex += factor * dx;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import { supabaseClient } from '../services/supabaseClient';
 import type { ChatMessage } from '../services/supabaseClient';
 import { useSimulatorStore } from '../store/useSimulatorStore';
@@ -7,7 +7,10 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 
-export function AgentLog() {
+const REMARK_PLUGINS = [remarkMath];
+const REHYPE_PLUGINS = [rehypeKatex];
+
+export const AgentLog = memo(function AgentLog() {
   const isChatOpen = useSimulatorStore((state) => state.isChatOpen);
   const toggleChat = useSimulatorStore((state) => state.toggleChat);
   const setIsChatOpen = useSimulatorStore((state) => state.setIsChatOpen);
@@ -68,7 +71,7 @@ export function AgentLog() {
       {/* Botón Disparador Sutil (Chat Icon) */}
       <button
         onClick={toggleChat}
-        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
           isChatOpen
             ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/35 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
             : 'bg-white/80 dark:bg-zinc-950/80 text-zinc-500 dark:text-zinc-400 border-black/10 dark:border-white/10 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 hover:border-black/20 dark:hover:border-white/20 shadow-md'
@@ -114,12 +117,14 @@ export function AgentLog() {
                 onClick={handleClearHistory}
                 className="text-[9px] text-zinc-500 hover:text-red-400 uppercase tracking-widest font-mono cursor-pointer transition-colors"
                 title="Limpiar historial de conversación"
+                aria-label="Limpiar historial"
               >
                 Clear
               </button>
               <button
                 onClick={() => setIsChatOpen(false)}
                 className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer p-0.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
+                aria-label="Cerrar chat"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -162,8 +167,8 @@ export function AgentLog() {
                         msg.content
                       ) : (
                         <ReactMarkdown
-                          remarkPlugins={[remarkMath]}
-                          rehypePlugins={[rehypeKatex]}
+                          remarkPlugins={REMARK_PLUGINS}
+                          rehypePlugins={REHYPE_PLUGINS}
                           components={{
                             p: ({node, ...props}) => <p className="my-1.5 wrap-break-word" {...props} />,
                             li: ({node, ...props}) => <li className="ml-4 list-disc my-0.5" {...props} />,
@@ -195,4 +200,4 @@ export function AgentLog() {
       )}
     </div>
   );
-}
+});

@@ -1,16 +1,14 @@
+import { memo } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
 
-export function RightInspector() {
-  const charges = useSimulatorStore((state) => state.charges);
-  const selectedChargeId = useSimulatorStore((state) => state.selectedChargeId);
+export const RightInspector = memo(function RightInspector() {
+  const selectedCharge = useSimulatorStore((state) => state.charges.find((c) => c.id === state.selectedChargeId));
   const isInspectorMinimized = useSimulatorStore((state) => state.isInspectorMinimized);
   const selectCharge = useSimulatorStore((state) => state.selectCharge);
   const updateCharge = useSimulatorStore((state) => state.updateCharge);
   const removeCharge = useSimulatorStore((state) => state.removeCharge);
   const toggleInspectorMinimized = useSimulatorStore((state) => state.toggleInspectorMinimized);
   const setInspectorMinimized = useSimulatorStore((state) => state.setInspectorMinimized);
-
-  const selectedCharge = charges.find((c) => c.id === selectedChargeId);
 
   if (!selectedCharge) return null;
 
@@ -44,7 +42,7 @@ export function RightInspector() {
       {/* Botón Disparador Sutil (Gear Icon) */}
       <button
         onClick={toggleInspectorMinimized}
-        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
           !isInspectorMinimized
             ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/35 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
             : 'bg-white/80 dark:bg-zinc-950/80 text-zinc-500 dark:text-zinc-400 border-black/10 dark:border-white/10 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 hover:border-black/20 dark:hover:border-white/20 shadow-md'
@@ -71,7 +69,7 @@ export function RightInspector() {
 
       {/* Panel Desplegable (Compacto, Sutil y Responsivo) */}
       {!isInspectorMinimized && (
-        <div className="w-[280px] sm:w-[320px] max-w-full relative border border-black/10 dark:border-white/10 p-5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] text-zinc-900 dark:text-white flex flex-col gap-5 transition-all duration-300 animate-in fade-in slide-in-from-top-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
+        <div className="w-[280px] sm:w-[320px] max-w-full relative border border-black/10 dark:border-white/10 p-5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] text-zinc-900 dark:text-white flex flex-col gap-5 transition-colors duration-300 animate-in fade-in slide-in-from-top-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
           {/* Background blur layer */}
           <div className="absolute inset-0 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl rounded-2xl -z-10 pointer-events-none" />
           <div className="flex justify-between items-center mb-1">
@@ -88,6 +86,7 @@ export function RightInspector() {
               onClick={() => setInspectorMinimized(true)}
               className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors cursor-pointer group"
               title="Minimizar"
+              aria-label="Minimizar"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:rotate-90">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -97,7 +96,7 @@ export function RightInspector() {
           </div>
 
           {/* Badge de tipo de carga */}
-          <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl border transition-all duration-300 ${
+          <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl border transition-colors duration-300 ${
             isPositive 
               ? 'bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
               : 'bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
@@ -112,8 +111,8 @@ export function RightInspector() {
             {/* Posición X */}
             <div className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <span>Coordenada X</span>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-all">
+                <label htmlFor="coord-x">Coordenada X</label>
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
                   <input
                     type="number"
                     id="coord-x"
@@ -133,15 +132,16 @@ export function RightInspector() {
                 step="0.1"
                 value={selectedCharge.position[0]}
                 onChange={(e) => handlePositionChange('x', e.target.value)}
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-all"
+                aria-label="Coordenada X"
+                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
               />
             </div>
 
             {/* Posición Y */}
             <div className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <span>Coordenada Y</span>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-all">
+                <label htmlFor="coord-y">Coordenada Y</label>
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
                   <input
                     type="number"
                     id="coord-y"
@@ -161,15 +161,16 @@ export function RightInspector() {
                 step="0.1"
                 value={selectedCharge.position[1]}
                 onChange={(e) => handlePositionChange('y', e.target.value)}
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-all"
+                aria-label="Coordenada Y"
+                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
               />
             </div>
 
             {/* Posición Z */}
             <div className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <span>Coordenada Z</span>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-all">
+                <label htmlFor="coord-z">Coordenada Z</label>
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
                   <input
                     type="number"
                     id="coord-z"
@@ -189,15 +190,16 @@ export function RightInspector() {
                 step="0.1"
                 value={selectedCharge.position[2]}
                 onChange={(e) => handlePositionChange('z', e.target.value)}
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-all"
+                aria-label="Coordenada Z"
+                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
               />
             </div>
 
             {/* Valor de Carga */}
             <div className="flex flex-col gap-2.5">
               <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <span>Magnitud |Q|</span>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-all">
+                <label htmlFor="magnitude">Magnitud |Q|</label>
+                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
                   <input
                     type="number"
                     id="magnitude"
@@ -218,7 +220,8 @@ export function RightInspector() {
                 step="0.1"
                 value={selectedCharge.value}
                 onChange={(e) => handleValueChange(e.target.value)}
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-all"
+                aria-label="Magnitud"
+                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
               />
             </div>
           </div>
@@ -229,7 +232,7 @@ export function RightInspector() {
             {/* Invertir Polaridad */}
             <button
               onClick={togglePolarity}
-              className={`w-full py-2.5 rounded-xl text-[13px] font-semibold border transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
+              className={`w-full py-2.5 rounded-xl text-[13px] font-semibold border transition-colors duration-300 cursor-pointer flex items-center justify-center gap-2 ${
                 isPositive 
                   ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
                   : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]'
@@ -250,7 +253,7 @@ export function RightInspector() {
                 selectCharge(null);
                 removeCharge(selectedCharge.id);
               }}
-              className="w-full py-2.5 rounded-xl bg-red-500/10 dark:bg-red-950/30 border border-red-500/20 text-red-600 dark:text-red-400 text-[13px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl bg-red-500/10 dark:bg-red-950/30 border border-red-500/20 text-red-600 dark:text-red-400 text-[13px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-colors duration-300 cursor-pointer flex items-center justify-center gap-2"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18"></path>
@@ -264,4 +267,4 @@ export function RightInspector() {
       )}
     </div>
   );
-}
+});

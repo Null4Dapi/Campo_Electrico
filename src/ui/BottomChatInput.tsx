@@ -1,10 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
 import { supabaseClient } from '../services/supabaseClient';
 import { aiService } from '../services/aiService';
 import { TelemetryHUD } from './TelemetryHUD';
 
-export function BottomChatInput() {
+const SUGGESTIONS = [
+  "¿Qué te gustaría crear?",
+  "Añade una carga...",
+  "Crea un dipolo",
+  "Añade un cuadripolo en el origen",
+  "Oculta las líneas de campo",
+  "Agrega una carga positiva de 5nC",
+  "Accede a los comandos rápidos con '/'",
+];
+
+const quickCommands = [
+  { cmd: 'Crea un dipolo eléctrico', desc: 'Carga positiva y negativa separadas' },
+  { cmd: 'Añade un cuadripolo', desc: '4 cargas alternas en cuadrado' },
+  { cmd: 'Borra todas las cargas', desc: 'Limpia la escena por completo' },
+  { cmd: 'Oculta las líneas de campo', desc: 'Desactiva la visualización de líneas' },
+  { cmd: 'Muestra la cuadrícula', desc: 'Activa la cuadrícula de referencia' },
+  { cmd: 'Centra la cámara', desc: 'Restablece la vista original' },
+];
+
+export const BottomChatInput = memo(function BottomChatInput() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showCommands, setShowCommands] = useState(false);
@@ -101,15 +120,7 @@ export function BottomChatInput() {
     }
   };
 
-  const SUGGESTIONS = [
-    "¿Qué te gustaría crear?",
-    "Añade una carga...",
-    "Crea un dipolo",
-    "Añade un cuadripolo en el origen",
-    "Oculta las líneas de campo",
-    "Agrega una carga positiva de 5nC",
-    "Accede a los comandos rápidos con '/'",
-  ];
+
 
   const [placeholderText, setPlaceholderText] = useState("");
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -144,14 +155,7 @@ export function BottomChatInput() {
     setShowCommands(false);
   };
 
-  const quickCommands = [
-    { cmd: 'Crea un dipolo eléctrico', desc: 'Carga positiva y negativa separadas' },
-    { cmd: 'Añade un cuadripolo', desc: '4 cargas alternas en cuadrado' },
-    { cmd: 'Borra todas las cargas', desc: 'Limpia la escena por completo' },
-    { cmd: 'Oculta las líneas de campo', desc: 'Desactiva la visualización de líneas' },
-    { cmd: 'Muestra la cuadrícula', desc: 'Activa la cuadrícula de referencia' },
-    { cmd: 'Centra la cámara', desc: 'Restablece la vista original' },
-  ];
+
 
   return (
     <div className="absolute bottom-6 left-0 w-full z-20 pointer-events-none flex justify-center px-4 sm:px-0">
@@ -200,6 +204,7 @@ export function BottomChatInput() {
             onKeyDown={handleKeyDown}
             placeholder={placeholderText || " "}
             rows={1}
+            aria-label="Mensaje para el copiloto"
             className="flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 outline-none resize-none border-0 px-2 py-1.5 leading-relaxed h-8 max-h-32 relative z-10 custom-scrollbar"
             disabled={isLoading}
           />
@@ -214,6 +219,7 @@ export function BottomChatInput() {
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || isLoading}
+              aria-label="Enviar mensaje"
               className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
                 input.trim() && !isLoading
                   ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 shadow-md cursor-pointer active:scale-95'
@@ -234,4 +240,4 @@ export function BottomChatInput() {
       </div>
     </div>
   );
-}
+});

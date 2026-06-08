@@ -20,7 +20,7 @@ function App() {
   }, [theme])
 
   return (
-    <div className="relative w-screen h-screen bg-slate-50 dark:bg-black overflow-hidden font-serif select-none text-zinc-900 dark:text-white transition-colors duration-500">
+    <div className="relative w-screen h-screen bg-slate-50 dark:bg-black overflow-hidden font-serif select-none text-zinc-900 dark:text-white">
       <Canvas camera={{ position: [0, 5, 10], fov: 50 }} gl={{ preserveDrawingBuffer: true }}>
         <Scene />
       </Canvas>

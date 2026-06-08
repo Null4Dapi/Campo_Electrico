@@ -195,3 +195,42 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.553 0.013 58.071);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   View Transition: Circular Reveal para el cambio de tema
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Desactivar el crossfade por defecto de View Transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* La snapshot antigua permanece fija en su lugar */
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+/* La snapshot nueva se revela con clip-path circular */
+::view-transition-new(root) {
+  z-index: 9999;
+  animation: circularReveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes circularReveal {
+  from {
+    clip-path: circle(0% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--theme-toggle-x, 50%) var(--theme-toggle-y, 50%));
+  }
+}
+
+/* Reducir movimiento: transición instantánea para usuarios con preferencias de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

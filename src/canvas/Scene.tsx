@@ -23,7 +23,7 @@ export function Scene() {
   const zoom = useSimulatorStore((state) => state.zoom)
   const theme = useSimulatorStore((state) => state.theme)
   
-  const three = useThree()
+  const camera = useThree((state) => state.camera)
   const controlsRef = useRef<OrbitControlsImpl | null>(null)
 
   // Plano para intersección del cursor
@@ -40,25 +40,23 @@ export function Scene() {
 
   useEffect(() => {
     if (resetCameraTrigger > 0) {
-      three.camera.position.set(0, 5, 10);
-      three.camera.lookAt(0, 0, 0);
+      camera.position.set(0, 5, 10);
+      camera.lookAt(0, 0, 0);
       if (controlsRef.current) {
         controlsRef.current.reset();
       }
     }
-  }, [resetCameraTrigger, three.camera]);
+  }, [resetCameraTrigger, camera]);
 
   useEffect(() => {
-    syncCameraZoom(three.camera, zoom / 100);
-  }, [zoom, three.camera]);
+    syncCameraZoom(camera, zoom / 100);
+  }, [zoom, camera]);
 
   useEffect(() => {
     if (import.meta.env.DEV) {
-      window.threeState = three;
-      window.threeScene = three.scene;
       window.threeControls = controlsRef.current;
     }
-  }, [three, three.scene]);
+  }, []);
 
   // Rastrear posición del mouse e interactuar con el DOM directamente (60fps sin react lagging)
   useFrame(({ raycaster }) => {
@@ -115,9 +113,9 @@ export function Scene() {
     }
   });
 
-  const bgColor = theme === 'dark' ? '#000000' : '#f8fafc'
-  const gridCellColor = theme === 'dark' ? '#444444' : '#D0D2D4'
-  const gridSectionColor = theme === 'dark' ? '#888888' : '#A0A2A4'
+  const bgColor = useMemo(() => theme === 'dark' ? '#000000' : '#f8fafc', [theme])
+  const gridCellColor = useMemo(() => theme === 'dark' ? '#444444' : '#D0D2D4', [theme])
+  const gridSectionColor = useMemo(() => theme === 'dark' ? '#888888' : '#A0A2A4', [theme])
 
   return (
     <>

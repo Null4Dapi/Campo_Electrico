@@ -1,8 +1,43 @@
+import { useRef } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
 
 export function HeaderNavbar() {
   const theme = useSimulatorStore((state) => state.theme);
   const toggleTheme = useSimulatorStore((state) => state.toggleTheme);
+  const isTransitioning = useRef(false);
+
+  const handleToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevenir spam durante una transición en progreso
+    if (isTransitioning.current) return;
+
+    // Obtener la posición central del botón para el origen de la animación circular
+    const button = e.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    // Establecer las coordenadas CSS custom properties para el clip-path
+    document.documentElement.style.setProperty('--theme-toggle-x', `${x}px`);
+    document.documentElement.style.setProperty('--theme-toggle-y', `${y}px`);
+
+    // Verificar soporte de View Transitions API
+    if (!document.startViewTransition) {
+      // Fallback: cambio instantáneo sin animación
+      toggleTheme();
+      return;
+    }
+
+    isTransitioning.current = true;
+    const transition = document.startViewTransition(() => {
+      toggleTheme();
+    });
+
+    transition.finished.then(() => {
+      isTransitioning.current = false;
+    }).catch(() => {
+      isTransitioning.current = false;
+    });
+  };
 
   const handleExport = () => {
     const canvas = document.querySelector('canvas');
@@ -29,15 +64,15 @@ export function HeaderNavbar() {
   };
 
   return (
-    <header className="absolute top-0 left-0 w-full pt-5 pb-16 px-6 sm:px-8 flex items-start justify-between z-30 select-none bg-linear-to-b from-slate-50/90 via-slate-50/60 dark:from-zinc-950/90 dark:via-zinc-950/60 to-transparent pointer-events-none transition-colors duration-500">
+    <header className="absolute top-0 left-0 w-full pt-5 pb-16 px-6 sm:px-8 flex items-start justify-between z-30 select-none bg-linear-to-b from-slate-50/90 via-slate-50/60 dark:from-zinc-950/90 dark:via-zinc-950/60 to-transparent pointer-events-none">
       
       {/* Lado Izquierdo: Título */}
       <div className="flex items-center pointer-events-auto">
         <div className="flex flex-col drop-shadow-md">
-          <h1 className="text-sm sm:text-base font-bold tracking-widest text-zinc-900 dark:text-white uppercase font-serif drop-shadow-lg transition-colors duration-300">
+          <h1 className="text-sm sm:text-base font-bold tracking-widest text-zinc-900 dark:text-white uppercase font-serif drop-shadow-lg">
             Campo Eléctrico 3D
           </h1>
-          <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-serif tracking-widest font-semibold uppercase leading-none mt-1 transition-colors duration-300">
+          <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-serif tracking-widest font-semibold uppercase leading-none mt-1">
             Simulador de Cargas
           </span>
         </div>
@@ -47,7 +82,7 @@ export function HeaderNavbar() {
       <div className="flex items-center gap-3 pointer-events-auto">
         {/* Toggle Theme */}
         <button
-          onClick={toggleTheme}
+          onClick={handleToggleTheme}
           className="flex items-center justify-center w-9 h-9 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 rounded-full text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all duration-300 active:scale-95 cursor-pointer backdrop-blur-md"
           title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
           aria-label="Alternar tema"
@@ -89,3 +124,4 @@ export function HeaderNavbar() {
     </header>
   );
 }
+

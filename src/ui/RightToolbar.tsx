@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
 
-export function RightToolbar() {
+export const RightToolbar = memo(function RightToolbar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
@@ -36,12 +36,13 @@ export function RightToolbar() {
             {/* Botón de Selección (Pointer) */}
             <button
               onClick={() => selectCharge(null)}
-              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                 selectedChargeId === null
                   ? 'bg-black/10 dark:bg-white/15 text-zinc-900 dark:text-white border-black/10 dark:border-white/15 shadow-[0_0_12px_rgba(0,0,0,0.1)] dark:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 border-transparent'
               }`}
               title="Modo Selección"
+              aria-label="Modo Selección"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="3 3 10.07 19.97 12.58 12.58 19.97 10.07 3 3"></polygon>
@@ -52,8 +53,9 @@ export function RightToolbar() {
             {/* Añadir Carga Positiva (q⁺) */}
             <button
               onClick={() => addCharge('positive')}
-              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/15 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95"
+              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/15 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95"
               title="Añadir Carga Positiva (+1 nC)"
+              aria-label="Añadir Carga Positiva (+1 nC)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" fill="currentColor" fillOpacity="0.1" />
@@ -65,8 +67,9 @@ export function RightToolbar() {
             {/* Añadir Carga Negativa (q⁻) */}
             <button
               onClick={() => addCharge('negative')}
-              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-500/15 hover:shadow-[0_0_12px_rgba(59,130,246,0.2)] flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95"
+              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-500/15 hover:shadow-[0_0_12px_rgba(59,130,246,0.2)] flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95"
               title="Añadir Carga Negativa (-1 nC)"
+              aria-label="Añadir Carga Negativa (-1 nC)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" fill="currentColor" fillOpacity="0.1" />
@@ -78,8 +81,9 @@ export function RightToolbar() {
             <div className="w-6 h-px bg-black/10 dark:bg-white/10 my-0.5" />
             <button
               onClick={() => setIsExpanded(true)}
-              className="group relative w-8 h-8 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center transition-all duration-300 cursor-pointer"
+              className="group relative w-8 h-8 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center transition-colors duration-300 cursor-pointer"
               title="Expandir Herramientas"
+              aria-label="Expandir Herramientas"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:-translate-x-px transition-transform">
                 <polyline points="15 18 9 12 15 6"></polyline>
@@ -95,12 +99,13 @@ export function RightToolbar() {
             <div className="col-span-2 flex justify-center">
               <button
                 onClick={() => selectCharge(null)}
-                className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+                className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                   selectedChargeId === null
                     ? 'bg-black/10 dark:bg-white/15 text-zinc-900 dark:text-white border-black/10 dark:border-white/15 shadow-[0_0_12px_rgba(0,0,0,0.1)] dark:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 border-transparent'
                 }`}
                 title="Modo Selección"
+                aria-label="Modo Selección"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polygon points="3 3 10.07 19.97 12.58 12.58 19.97 10.07 3 3"></polygon>
@@ -114,8 +119,9 @@ export function RightToolbar() {
             {/* Fila 2: Cargas q⁺ y q⁻ */}
             <button
               onClick={() => addCharge('positive')}
-              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/15 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95"
+              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/15 hover:shadow-[0_0_12px_rgba(239,68,68,0.2)] flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95"
               title="Añadir Carga Positiva (+1 nC)"
+              aria-label="Añadir Carga Positiva (+1 nC)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" fill="currentColor" fillOpacity="0.1" />
@@ -126,8 +132,9 @@ export function RightToolbar() {
 
             <button
               onClick={() => addCharge('negative')}
-              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-500/15 hover:shadow-[0_0_12px_rgba(59,130,246,0.2)] flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95"
+              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-blue-400 hover:text-blue-300 hover:bg-blue-500/15 hover:shadow-[0_0_12px_rgba(59,130,246,0.2)] flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95"
               title="Añadir Carga Negativa (-1 nC)"
+              aria-label="Añadir Carga Negativa (-1 nC)"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.2" fill="currentColor" fillOpacity="0.1" />
@@ -141,12 +148,13 @@ export function RightToolbar() {
             {/* Fila 3: Visualización - Líneas y Equipotenciales */}
             <button
               onClick={toggleFieldLines}
-              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                 showFieldLines
                   ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 border-transparent'
               }`}
               title="Alternar Líneas de Campo"
+              aria-label="Alternar Líneas de Campo"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 3v18"></path>
@@ -158,12 +166,13 @@ export function RightToolbar() {
 
             <button
               onClick={toggleEquipotential}
-              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                 showEquipotential
                   ? 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 shadow-[0_0_12px_rgba(99,102,241,0.25)]'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 border-transparent'
               }`}
               title="Alternar Superficies Equipotenciales"
+              aria-label="Alternar Superficies Equipotenciales"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -175,12 +184,13 @@ export function RightToolbar() {
             {/* Fila 4: Visualización - Cuadrícula e Imán (Snap) */}
             <button
               onClick={toggleGridVisible}
-              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                 gridVisible
                   ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 border-transparent'
               }`}
               title="Alternar Cuadrícula"
+              aria-label="Alternar Cuadrícula"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="18" height="18" x="3" y="3" rx="2"></rect>
@@ -193,12 +203,13 @@ export function RightToolbar() {
 
             <button
               onClick={toggleSnapToGrid}
-              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+              className={`group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                 snapToGrid
                   ? 'bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 border-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 border-transparent'
               }`}
               title="Ajustar a la Cuadrícula"
+              aria-label="Ajustar a la Cuadrícula"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m6 9 6-6 6 6v6a6 6 0 0 1-12 0Z"></path>
@@ -211,8 +222,9 @@ export function RightToolbar() {
             {/* Fila 5: Escena - Cámara y Papelera */}
             <button
               onClick={triggerResetCamera}
-              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95"
+              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95"
               title="Restablecer Cámara"
+              aria-label="Restablecer Cámara"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:rotate-90 transition-transform duration-500">
                 <circle cx="12" cy="12" r="10" />
@@ -223,8 +235,9 @@ export function RightToolbar() {
 
             <button
               onClick={clearScene}
-              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-red-500/80 hover:text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95"
+              className="group relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-red-500/80 hover:text-red-400 hover:bg-red-500/20 flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95"
               title="Limpiar Todo"
+              aria-label="Limpiar Todo"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -239,6 +252,7 @@ export function RightToolbar() {
                 onClick={() => setZoom(Math.max(25, zoom - 25))}
                 className="w-7 h-7 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center cursor-pointer transition-colors active:scale-90"
                 title="Disminuir Zoom"
+                aria-label="Disminuir Zoom"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
@@ -253,6 +267,7 @@ export function RightToolbar() {
                 onClick={() => setZoom(Math.min(200, zoom + 25))}
                 className="w-7 h-7 rounded-lg text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center cursor-pointer transition-colors active:scale-90"
                 title="Aumentar Zoom"
+                aria-label="Aumentar Zoom"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8"></circle>
@@ -269,12 +284,13 @@ export function RightToolbar() {
             <div className="relative">
               <button
                 onClick={() => setShowHelp(!showHelp)}
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 border ${
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
                   showHelp 
                     ? 'border-blue-500/40 text-blue-600 dark:text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)] bg-blue-500/10' 
                     : 'border-black/10 dark:border-white/10 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
                 title="Ayuda del Simulador"
+                aria-label="Ayuda del Simulador"
               >
                 <span className="text-xs font-semibold font-sans">?</span>
               </button>
@@ -298,8 +314,9 @@ export function RightToolbar() {
                 setIsExpanded(false);
                 setShowHelp(false);
               }}
-              className="group relative w-8 h-8 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center transition-all duration-300 cursor-pointer"
+              className="group relative w-8 h-8 rounded-xl text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 flex items-center justify-center transition-colors duration-300 cursor-pointer"
               title="Contraer Barra"
+              aria-label="Contraer Barra"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transform group-hover:translate-x-px transition-transform">
                 <polyline points="9 18 15 12 9 6"></polyline>
@@ -311,4 +328,4 @@ export function RightToolbar() {
       </div>
     </div>
   );
-}
+});
