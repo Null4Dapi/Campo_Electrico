@@ -144,11 +144,6 @@ export function BottomChatInput() {
     setShowCommands(false);
   };
 
-  const openManualActions = () => {
-    setShowCommands((current) => !current);
-    textareaRef.current?.focus();
-  };
-
   const quickCommands = [
     { cmd: 'Crea un dipolo eléctrico', desc: 'Carga positiva y negativa separadas' },
     { cmd: 'Añade un cuadripolo', desc: '4 cargas alternas en cuadrado' },
