@@ -37,7 +37,7 @@ export function HeaderNavbar() {
           <h1 className="text-sm sm:text-base font-bold tracking-widest text-zinc-900 dark:text-white uppercase font-serif drop-shadow-lg transition-colors duration-300">
             Campo Eléctrico 3D
           </h1>
-          <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-mono tracking-widest font-semibold uppercase leading-none mt-1 transition-colors duration-300">
+          <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-serif tracking-widest font-semibold uppercase leading-none mt-1 transition-colors duration-300">
             Simulador de Cargas
           </span>
         </div>
