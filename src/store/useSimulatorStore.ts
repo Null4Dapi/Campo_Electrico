@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import type { SimulatorState, ChargeType } from '../types';
+import type { SimulatorState, ChargeType, CameraView } from '../types';
 
 export const useSimulatorStore = create<SimulatorState>((set) => ({
+  interactionMode: 'select',
   charges: [],
   showFieldLines: true,
   showEquipotential: true,
@@ -13,6 +14,8 @@ export const useSimulatorStore = create<SimulatorState>((set) => ({
   snapToGrid: false,
   gridVisible: true,
   showSettings: false,
+  showTapeMeasure: false,
+  cameraView: 'isometric',
   zoom: 100,
   isChatOpen: false,
   sessionId: sessionStorage.getItem('simulator_chat_session_id') || (() => {
@@ -21,6 +24,7 @@ export const useSimulatorStore = create<SimulatorState>((set) => ({
     return newId;
   })(),
   theme: typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark',
+  hasSeenOnboarding: localStorage.getItem('campo_electrico_onboarding') === 'true',
 
   toggleTheme: () => set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' })),
   setTheme: (theme) => set({ theme }),
@@ -34,7 +38,7 @@ export const useSimulatorStore = create<SimulatorState>((set) => ({
     let attempts = 0;
     
     while (!isValid && attempts < 50) {
-      pos = [Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4]; // Expanded spawn area slightly in 3D
+      pos = [Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4]; // Determina el vector de aparición utilizando un espacio volumétrico expandido
       isValid = true;
       for (const charge of state.charges) {
         const dx = charge.position[0] - pos[0];
@@ -104,6 +108,8 @@ export const useSimulatorStore = create<SimulatorState>((set) => ({
   setSnapToGrid: (snap) => set({ snapToGrid: snap }),
   toggleSettings: () => set((state) => ({ showSettings: !state.showSettings })),
   setShowSettings: (show) => set({ showSettings: show }),
+  toggleTapeMeasure: () => set((state) => ({ showTapeMeasure: !state.showTapeMeasure })),
+  setCameraView: (view: CameraView) => set({ cameraView: view }),
   setZoom: (zoom) => set({ zoom }),
   toggleSimulating: () => set((state) => ({ isSimulating: !state.isSimulating })),
   setSimulating: (isSimulating) => set({ isSimulating }),
@@ -114,9 +120,18 @@ export const useSimulatorStore = create<SimulatorState>((set) => ({
     sessionStorage.setItem('simulator_chat_session_id', newId);
     return { sessionId: newId };
   }),
+  completeOnboarding: () => {
+    localStorage.setItem('campo_electrico_onboarding', 'true');
+    set({ hasSeenOnboarding: true });
+  },
+  resetOnboarding: () => {
+    localStorage.removeItem('campo_electrico_onboarding');
+    set({ hasSeenOnboarding: false });
+  },
+  setInteractionMode: (mode) => set({ interactionMode: mode }),
 }));
 
-// Exponer la tienda para pruebas y automatización solo en desarrollo
+// Expone el objeto de estado en el entorno global para facilitar instrumentación y pruebas automatizadas
 if (import.meta.env.DEV) {
   window.useSimulatorStore = useSimulatorStore;
 }

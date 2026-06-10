@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, memo } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
 import { supabaseClient } from '../services/supabaseClient';
 import { aiService } from '../services/aiService';
-import { TelemetryHUD } from './TelemetryHUD';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SUGGESTIONS = [
   "¿Qué te gustaría crear?",
@@ -34,10 +34,10 @@ export const BottomChatInput = memo(function BottomChatInput() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Obtener sessionId desde el store global de Zustand
+  // Recupera el identificador de sesión a través del gestor de estado global
   const sessionId = useSimulatorStore((state) => state.sessionId);
 
-  // Ajustar la altura del textarea automáticamente
+  // Redimensiona verticalmente el área de texto de forma dinámica según su contenido
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -45,7 +45,7 @@ export const BottomChatInput = memo(function BottomChatInput() {
     }
   }, [input]);
 
-  // Cerrar menús al hacer click afuera
+  // Controla el cierre de elementos superpuestos al detectar clics externos
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -67,17 +67,17 @@ export const BottomChatInput = memo(function BottomChatInput() {
     setIsChatOpen(true);
 
     try {
-      // 1. Guardar mensaje del usuario
+      // 1. Almacena el texto introducido por el usuario
       await supabaseClient.saveMessage('user', messageText.trim(), sessionId);
       window.dispatchEvent(new CustomEvent('chat-message-added'));
 
-      // 2. Obtener historial de chat para alimentar a la IA
+      // 2. Recupera la secuencia de diálogo previa como contexto para la comunicación remota
       const history = await supabaseClient.getMessages(sessionId);
 
-      // 3. Consultar Copiloto IA (vía Supabase Edge Function)
+      // 3. Ejecuta la consulta al servicio mediante una función remota
       const response = await aiService.getChatResponse(history);
 
-      // 4. Guardar respuesta de la IA
+      // 4. Almacena el resultado generado por el asistente virtual
       await supabaseClient.saveMessage('assistant', response, sessionId);
       window.dispatchEvent(new CustomEvent('chat-message-added'));
 
@@ -86,7 +86,7 @@ export const BottomChatInput = memo(function BottomChatInput() {
       const errorMessage = err instanceof Error ? err.message : 'Error de conexión';
       setError(errorMessage);
       
-      // Intentar guardar un mensaje de error simulado del asistente
+      // Genera un registro formal indicando el fallo de la operación requerida
       await supabaseClient.saveMessage(
         'assistant',
         `❌ **Error:** No se pudo completar tu petición. ${errorMessage}`,
@@ -112,7 +112,7 @@ export const BottomChatInput = memo(function BottomChatInput() {
     const value = e.target.value;
     setInput(value);
     
-    // Mostrar lista de comandos rápidos si empieza con '/'
+    // Despliega el menú contextual de acciones directas ante el prefijo correspondiente
     if (value.startsWith('/')) {
       setShowCommands(true);
     } else {
@@ -126,18 +126,18 @@ export const BottomChatInput = memo(function BottomChatInput() {
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Animación del placeholder
+  // Controla el ciclo de animación textual en el texto de sugerencia
   useEffect(() => {
     const currentSuggestion = SUGGESTIONS[suggestionIndex];
-    const typingSpeed = isDeleting ? 30 : 60; // Velocidad de borrado y escritura
+    const typingSpeed = isDeleting ? 30 : 60; // Define la tasa de actualización para la animación tipográfica
     const currentLength = placeholderText.length;
     
     if (!isDeleting && currentLength === currentSuggestion.length) {
-      // Ha terminado de escribir. Pausa de ~15-20 segundos antes de borrar
+      // Aplica un tiempo de espera prolongado al finalizar la escritura antes de iniciar el retroceso
       const pauseTimer = setTimeout(() => setIsDeleting(true), 18000); 
       return () => clearTimeout(pauseTimer);
     } else if (isDeleting && currentLength === 0) {
-      // Ha terminado de borrar. Pasa a la siguiente sugerencia
+      // Avanza al siguiente elemento del carrusel tras limpiar la cadena de texto
       setIsDeleting(false);
       setSuggestionIndex((prev) => (prev + 1) % SUGGESTIONS.length);
       return;
@@ -157,23 +157,26 @@ export const BottomChatInput = memo(function BottomChatInput() {
 
 
 
-  return (
-    <div className="absolute bottom-6 left-0 w-full z-20 pointer-events-none flex justify-center px-4 sm:px-0">
-      <div ref={containerRef} className="w-full max-w-xl relative pointer-events-auto flex flex-col items-center gap-3">
-        
-        {/* Telemetría Centrada encima del input */}
-        <TelemetryHUD />
+  const [isFocused, setIsFocused] = useState(false);
 
-        {/* Sugerencias de comandos '/' */}
+  return (
+    <div className="pointer-events-none flex flex-col items-center gap-3 self-center z-20 w-full max-w-xl px-4 sm:px-0">
+      <div ref={containerRef} className="relative pointer-events-auto flex flex-col items-center w-full">
+        
+        {/* Menú de comandos predeterminados */}
+        <AnimatePresence>
         {showCommands && (
-          <div className="absolute bottom-full left-0 w-full mb-2 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl z-30">
-            {/* Background blur layer */}
-            <div className="absolute inset-0 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl -z-10 pointer-events-none" />
+          <motion.div 
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            className="absolute bottom-full left-0 w-full mb-2 glass-panel-floating overflow-hidden z-30"
+          >
             <div className="relative z-10">
-              <div className="px-3 py-1.5 bg-black/5 dark:bg-white/5 border-b border-black/5 dark:border-white/5 text-[10px] text-zinc-600 dark:text-zinc-400 font-semibold tracking-wider uppercase font-mono">
+              <div className="px-3 py-1.5 bg-black/5 dark:bg-white/5 border-b border-border text-[10px] text-muted-foreground font-semibold tracking-wider uppercase font-mono">
                 Comandos rápidos del Simulador
               </div>
-              <div className="max-h-48 overflow-y-auto">
+              <div className="max-h-48 overflow-y-auto custom-scrollbar">
                 {quickCommands.map((qc, index) => (
                   <button
                     key={index}
@@ -186,14 +189,17 @@ export const BottomChatInput = memo(function BottomChatInput() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
 
-        {/* Input Principal */}
-        <div className="w-full relative border border-black/10 dark:border-white/10 rounded-2xl p-2.5 flex flex-row items-end gap-2 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.6)] focus-within:border-black/20 dark:focus-within:border-white/20 transition-all duration-300">
-          {/* Background blur layer */}
-          <div className="absolute inset-0 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl rounded-2xl -z-10 pointer-events-none" />
-          
+        {/* Campo de Entrada Principal */}
+        <motion.div 
+          initial={false}
+          animate={{ width: isFocused || input ? '100%' : '280px' }}
+          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          className="glass-panel-floating flex flex-row items-end gap-2 p-1.5 px-2 mx-auto origin-center"
+        >
           {/* Caja de Texto */}
           <textarea
             ref={textareaRef}
@@ -202,10 +208,12 @@ export const BottomChatInput = memo(function BottomChatInput() {
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             placeholder={placeholderText || " "}
             rows={1}
             aria-label="Mensaje para el copiloto"
-            className="flex-1 bg-transparent text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-500 outline-none resize-none border-0 px-2 py-1.5 leading-relaxed h-8 max-h-32 relative z-10 custom-scrollbar"
+            className={`flex-1 w-full min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none border-0 px-2 py-1.5 leading-relaxed h-8 max-h-32 relative z-10 custom-scrollbar ${!input ? 'whitespace-nowrap overflow-hidden' : ''}`}
             disabled={isLoading}
           />
 
@@ -220,10 +228,10 @@ export const BottomChatInput = memo(function BottomChatInput() {
               onClick={() => handleSend()}
               disabled={!input.trim() || isLoading}
               aria-label="Enviar mensaje"
-              className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+              className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center transition-all ${
                 input.trim() && !isLoading
-                  ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 shadow-md cursor-pointer active:scale-95'
-                  : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 cursor-default'
+                  ? 'bg-primary text-primary-foreground shadow-md cursor-pointer active:scale-95'
+                  : 'bg-muted text-muted-foreground cursor-default'
               }`}
             >
               {isLoading ? (
@@ -236,7 +244,7 @@ export const BottomChatInput = memo(function BottomChatInput() {
               )}
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

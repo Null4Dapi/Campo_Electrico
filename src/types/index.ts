@@ -1,13 +1,17 @@
-export type ChargeType = 'positive' | 'negative';
+export type ChargeType = 'positive' | 'negative' | 'test';
+export type CameraView = 'isometric' | 'top' | 'front' | 'right' | 'custom';
 
 export interface Charge {
-  id: string;                    // crypto.randomUUID()
-  position: [number, number, number]; // [x, y, z] en unidades de escena Three.js
-  value: number;                 // magnitud en nanoCulombios (nC). Ej: 1 = 1nC
+  id: string;                    // Identificador único universal
+  position: [number, number, number]; // Vector de coordenadas espaciales
+  value: number;                 // Magnitud de la carga escalar paramétrica
   type: ChargeType;
 }
 
+export type InteractionMode = 'select' | 'pan';
+
 export interface SimulatorState {
+  interactionMode: InteractionMode;
   charges: Charge[];
   showFieldLines: boolean;
   showEquipotential: boolean;
@@ -19,12 +23,15 @@ export interface SimulatorState {
   snapToGrid: boolean;
   gridVisible: boolean;
   showSettings: boolean;
+  showTapeMeasure: boolean;
+  cameraView: CameraView;
   zoom: number;
   isChatOpen: boolean;
   sessionId: string;
   theme: 'dark' | 'light';
+  hasSeenOnboarding: boolean;
   
-  // Acciones
+  // Métodos de mutación de estado
   toggleTheme: () => void;
   setTheme: (theme: 'dark' | 'light') => void;
   addCharge: (type: ChargeType) => void;
@@ -47,10 +54,15 @@ export interface SimulatorState {
   setSnapToGrid: (snap: boolean) => void;
   toggleSettings: () => void;
   setShowSettings: (show: boolean) => void;
+  toggleTapeMeasure: () => void;
+  setCameraView: (view: CameraView) => void;
   setZoom: (zoom: number) => void;
   toggleSimulating: () => void;
   setSimulating: (simulating: boolean) => void;
   toggleChat: () => void;
   setIsChatOpen: (open: boolean) => void;
   clearChatSession: () => void;
+  setInteractionMode: (mode: InteractionMode) => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
 }

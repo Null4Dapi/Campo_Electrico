@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState, memo } from 'react';
 import { supabaseClient } from '../services/supabaseClient';
 import type { ChatMessage } from '../services/supabaseClient';
@@ -6,6 +7,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { motion } from 'framer-motion';
+import { MessageSquare, Sparkles, Eraser, X } from 'lucide-react';
 
 const REMARK_PLUGINS = [remarkMath];
 const REHYPE_PLUGINS = [rehypeKatex];
@@ -16,10 +19,11 @@ export const AgentLog = memo(function AgentLog() {
   const setIsChatOpen = useSimulatorStore((state) => state.setIsChatOpen);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const sessionId = useSimulatorStore((state) => state.sessionId);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Cargar al montar e iniciar listeners
+  // Inicializa la carga de datos de la sesión y establece escuchadores de eventos al montar el componente
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -27,12 +31,14 @@ export const AgentLog = memo(function AgentLog() {
         setMessages(data);
       } catch (e) {
         console.error('Error loading chat history:', e);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     void fetchMessages();
 
-    // Escuchar el evento de mensaje agregado
+    // Suscribe el componente a la emisión de nuevos mensajes en el chat
     const handleChatUpdated = () => {
       void fetchMessages();
     };
@@ -43,7 +49,7 @@ export const AgentLog = memo(function AgentLog() {
     };
   }, [sessionId]);
 
-  // Hacer scroll automático al final cuando hay nuevos mensajes o se abre
+  // Controla el desplazamiento automático de la vista hacia los mensajes recientes
   useEffect(() => {
     if (isChatOpen && scrollRef.current) {
       setTimeout(() => {
@@ -57,7 +63,7 @@ export const AgentLog = memo(function AgentLog() {
 
   const clearChatSession = useSimulatorStore((state) => state.clearChatSession);
 
-  // Limpiar el historial local y de la base de datos
+  // Ejecuta la purga del historial tanto en el almacenamiento local como en la base de datos remota
   const handleClearHistory = () => {
     clearChatSession();
     setMessages([]);
@@ -65,139 +71,127 @@ export const AgentLog = memo(function AgentLog() {
 
 
 
-  return (
-    <div className="absolute top-[80px] left-4 lg:left-6 z-30 pointer-events-auto flex flex-col items-start gap-2.5 max-w-[calc(100vw-2rem)]">
-      
-      {/* Botón Disparador Sutil (Chat Icon) */}
-      <button
-        onClick={toggleChat}
-        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
-          isChatOpen
-            ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/35 shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-            : 'bg-white/80 dark:bg-zinc-950/80 text-zinc-500 dark:text-zinc-400 border-black/10 dark:border-white/10 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 hover:border-black/20 dark:hover:border-white/20 shadow-md'
-        }`}
-        title={isChatOpen ? 'Cerrar Chat' : 'Abrir Chat'}
-        aria-label="Alternar Chat de Copiloto"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="transition-transform duration-300 hover:scale-105"
+  if (!isChatOpen) {
+    return (
+      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 pointer-events-auto glass-panel-floating flex items-center justify-center p-1.5 z-30">
+        <button
+          onClick={toggleChat}
+          className="flex items-center justify-center w-8 h-8 rounded-[calc(var(--radius)-4px)] text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all duration-200 active:scale-95 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          title="Abrir Chat"
+          aria-label="Alternar Chat de Copiloto"
         >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </button>
+          <MessageSquare className="w-5 h-5" />
+        </button>
+      </div>
+    );
+  }
 
-      {/* Panel Desplegable (Compacto, Sutil y Responsivo) */}
-      {isChatOpen && (
-        <div className="w-[280px] sm:w-[320px] max-w-full h-[280px] sm:h-[320px] relative border border-black/10 dark:border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-3 duration-300">
-          {/* Background blur layer */}
-          <div className="absolute inset-0 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl rounded-2xl -z-10 pointer-events-none" />
-          
-          {/* Cabecera Minimalista */}
-          <div className="px-3.5 py-2.5 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-black/[0.02] dark:bg-white/[0.02]">
-            <div className="flex items-center gap-1.5 opacity-80">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-blue-400">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-200 tracking-wider uppercase font-sans">
-                Copiloto Chat
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={handleClearHistory}
-                className="text-[9px] text-zinc-500 hover:text-red-400 uppercase tracking-widest font-mono cursor-pointer transition-colors"
-                title="Limpiar historial de conversación"
-                aria-label="Limpiar historial"
-              >
-                Clear
-              </button>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white cursor-pointer p-0.5 hover:bg-black/5 dark:hover:bg-white/5 rounded transition-colors"
-                aria-label="Cerrar chat"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Historial Scrollable */}
-          <div 
-            ref={scrollRef}
-            className="flex-1 overflow-y-auto p-3.5 space-y-3.5 flex flex-col custom-scrollbar"
-          >
-            {messages.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center text-center p-2 text-zinc-500">
-                <div className="text-[10px] leading-relaxed">No hay mensajes recientes.<br />Escribe un comando abajo para comenzar.</div>
-              </div>
-            ) : (
-              messages.map((msg, index) => {
-                const isUser = msg.role === 'user';
-                return (
-                  <div
-                    key={msg.id || index}
-                    className={`flex flex-col max-w-[90%] ${
-                      isUser ? 'self-end items-end' : 'self-start items-start'
-                    }`}
-                  >
-                    <span className="text-[8px] text-zinc-500 font-mono uppercase tracking-widest mb-0.5">
-                      {isUser ? 'Tú' : 'IA'}
-                    </span>
-                    <div
-                      className={`text-[11px] leading-relaxed px-3 py-2 rounded-xl ${
-                        isUser
-                          ? 'bg-blue-500/10 text-blue-900 dark:text-blue-100 rounded-tr-none border border-blue-500/20'
-                          : 'bg-black/5 dark:bg-white/5 text-zinc-700 dark:text-zinc-300 border border-black/5 dark:border-white/5 rounded-tl-none'
-                      }`}
-                    >
-                      {isUser ? (
-                        msg.content
-                      ) : (
-                        <ReactMarkdown
-                          remarkPlugins={REMARK_PLUGINS}
-                          rehypePlugins={REHYPE_PLUGINS}
-                          components={{
-                            p: ({node, ...props}) => <p className="my-1.5 wrap-break-word" {...props} />,
-                            li: ({node, ...props}) => <li className="ml-4 list-disc my-0.5" {...props} />,
-                            code: ({node, className, children, ...props}) => {
-                              const match = /language-(\w+)/.exec(className || '');
-                              return !match ? (
-                                <code className="bg-black/5 dark:bg-white/5 rounded border border-black/5 dark:border-white/5 px-1 py-0.5 text-[10px] font-mono text-indigo-600 dark:text-indigo-300" {...props}>
-                                  {children}
-                                </code>
-                              ) : (
-                                <code className="block my-1 px-2 py-1 bg-black/5 dark:bg-white/5 rounded border border-black/5 dark:border-white/5 text-[10px] font-mono text-indigo-600 dark:text-indigo-300 overflow-x-auto" {...props}>
-                                  {children}
-                                </code>
-                              );
-                            },
-                            strong: ({node, ...props}) => <strong className="font-semibold text-zinc-900 dark:text-zinc-100" {...props} />
-                          }}
-                        >
-                          {msg.content.replace(/<actions>[\s\S]*?<\/actions>/g, '').trim()}
-                        </ReactMarkdown>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+  return (
+    <motion.div 
+      initial={{ scale: 0.9, opacity: 0, y: 20 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      exit={{ scale: 0.9, opacity: 0, y: 20 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      style={{ originX: 1, originY: 1 }}
+      className="absolute bottom-4 right-4 md:bottom-6 md:right-6 glass-panel-floating pointer-events-auto flex flex-col w-[300px] sm:w-[340px] h-[360px] sm:h-[420px] overflow-hidden z-30 shadow-2xl"
+    >
+      {/* Encabezado visual de la interfaz del asistente */}
+      <div className="px-4 py-3 border-b border-border/50 flex items-center justify-between bg-black/5 dark:bg-white/5 backdrop-blur-md">
+        <div className="flex items-center gap-2.5">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-[11px] font-bold text-foreground tracking-widest uppercase">
+            Asistente
+          </span>
         </div>
-      )}
-    </div>
+        
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleClearHistory}
+            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors cursor-pointer"
+            title="Limpiar historial"
+          >
+            <Eraser className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setIsChatOpen(false)}
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+            title="Cerrar chat"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Contenedor desplazable para el historial de mensajes */}
+      <div 
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4 flex flex-col custom-scrollbar"
+      >
+        {isLoading ? (
+          // Indicador de estado de carga mediante elementos esqueleto
+          <div className="flex flex-col gap-4 animate-pulse">
+            <div className="self-end w-3/4 h-10 bg-primary/20 rounded-2xl rounded-br-sm" />
+            <div className="self-start w-2/3 h-16 bg-muted/50 rounded-2xl rounded-bl-sm" />
+            <div className="self-start w-1/2 h-10 bg-muted/50 rounded-2xl rounded-bl-sm" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 text-muted-foreground">
+            <Sparkles className="w-8 h-8 mb-3 opacity-20" />
+            <p className="text-xs font-medium">¿En qué puedo ayudarte hoy?</p>
+          </div>
+        ) : (
+          messages.map((msg, index) => {
+            const isUser = msg.role === 'user';
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                key={msg.id || index}
+                className={`flex flex-col max-w-[85%] ${
+                  isUser ? 'self-end' : 'self-start'
+                }`}
+              >
+                <div
+                  className={`text-[12px] leading-relaxed px-3.5 py-2.5 shadow-sm ${
+                    isUser
+                      ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-sm'
+                      : 'bg-black/5 dark:bg-white/10 backdrop-blur-md border border-border/50 text-foreground rounded-2xl rounded-bl-sm'
+                  }`}
+                >
+                  {isUser ? (
+                    msg.content
+                  ) : (
+                    <ReactMarkdown
+                      remarkPlugins={REMARK_PLUGINS}
+                      rehypePlugins={REHYPE_PLUGINS}
+                      components={{
+                        p: ({node: _, ...props}) => <p className="my-1.5 wrap-break-word" {...props} />,
+                        li: ({node: _, ...props}) => <li className="ml-4 list-disc my-0.5" {...props} />,
+                        code: ({node: _, className, children, ...props}) => {
+                          const match = /language-(\w+)/.exec(className || '');
+                          return !match ? (
+                            <code className="bg-black/5 dark:bg-white/5 rounded border border-black/5 dark:border-white/5 px-1 py-0.5 text-[10px] font-mono text-indigo-600 dark:text-indigo-300" {...props}>
+                              {children}
+                            </code>
+                          ) : (
+                            <code className="block my-1 px-2 py-1 bg-black/5 dark:bg-white/5 rounded border border-black/5 dark:border-white/5 text-[10px] font-mono text-indigo-600 dark:text-indigo-300 overflow-x-auto" {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        strong: ({node: _, ...props}) => <strong className="font-semibold text-zinc-900 dark:text-zinc-100" {...props} />
+                      }}
+                    >
+                      {msg.content.replace(/<actions>[\s\S]*?<\/actions>/g, '').trim()}
+                    </ReactMarkdown>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })
+        )}
+      </div>
+    </motion.div>
   );
 });

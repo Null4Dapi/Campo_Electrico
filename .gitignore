@@ -80,11 +80,33 @@ Desktop.ini
 *.swo
 
 # ============================================
-# Agentes IA y generados por herramientas
+# Pruebas, experimentos y archivos de desarrollo
+# ============================================
+scratch/
+tests/
+test/
+__tests__/
+**/__tests__/
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+test-results/
+coverage/
+playground/
+tmp/
+
+# ============================================
+# Agentes IA / herramientas de asistencia
 # ============================================
 .agents/
 .gemini/
-scratch/
+.copilot/
+.claude/
+.aider*
+.cursor/
 review/
 documentation/
 powershell.cmd

@@ -1,28 +1,36 @@
 import { useRef } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
+import { Menu, Ruler, Grid, Moon, Sun, Image as ImageIcon, Trash2, HelpCircle } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 
 export function HeaderNavbar() {
   const theme = useSimulatorStore((state) => state.theme);
   const toggleTheme = useSimulatorStore((state) => state.toggleTheme);
+  const toggleTapeMeasure = useSimulatorStore((state) => state.toggleTapeMeasure);
+  const showTapeMeasure = useSimulatorStore((state) => state.showTapeMeasure);
+  const toggleGridVisible = useSimulatorStore((state) => state.toggleGridVisible);
+  const gridVisible = useSimulatorStore((state) => state.gridVisible);
+  const clearScene = useSimulatorStore((state) => state.clearScene);
+  const resetOnboarding = useSimulatorStore((state) => state.resetOnboarding);
   const isTransitioning = useRef(false);
 
-  const handleToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Prevenir spam durante una transición en progreso
+  const handleToggleTheme = (e: React.MouseEvent) => {
     if (isTransitioning.current) return;
 
-    // Obtener la posición central del botón para el origen de la animación circular
-    const button = e.currentTarget;
-    const rect = button.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
+    // Determina las coordenadas exactas del evento de interacción
+    const x = e.clientX;
+    const y = e.clientY;
 
-    // Establecer las coordenadas CSS custom properties para el clip-path
     document.documentElement.style.setProperty('--theme-toggle-x', `${x}px`);
     document.documentElement.style.setProperty('--theme-toggle-y', `${y}px`);
 
-    // Verificar soporte de View Transitions API
     if (!document.startViewTransition) {
-      // Fallback: cambio instantáneo sin animación
       toggleTheme();
       return;
     }
@@ -64,62 +72,55 @@ export function HeaderNavbar() {
   };
 
   return (
-    <header className="absolute top-0 left-0 w-full pt-5 pb-16 px-6 sm:px-8 flex items-start justify-between z-30 select-none bg-linear-to-b from-slate-50/90 via-slate-50/60 dark:from-zinc-950/90 dark:via-zinc-950/60 to-transparent pointer-events-none">
+    <header className="flex items-center gap-4 select-none">
       
-      {/* Lado Izquierdo: Título */}
-      <div className="flex items-center pointer-events-auto">
-        <div className="flex flex-col drop-shadow-md">
-          <h1 className="text-sm sm:text-base font-bold tracking-widest text-zinc-900 dark:text-white uppercase font-serif drop-shadow-lg">
-            Campo Eléctrico 3D
-          </h1>
-          <span className="text-[9px] sm:text-[10px] text-blue-600 dark:text-blue-400 font-serif tracking-widest font-semibold uppercase leading-none mt-1">
-            Simulador de Cargas
-          </span>
-        </div>
+      {/* Elemento disparador del menú con estilo de panel translúcido */}
+      <div className="pointer-events-auto glass-panel-floating flex items-center justify-center p-1.5">
+        <DropdownMenu>
+        <DropdownMenuTrigger className="flex items-center justify-center w-8 h-8 rounded-[calc(var(--radius)-4px)] text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all duration-200 active:scale-95 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary">
+          <Menu className="w-5 h-5" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" sideOffset={16} alignOffset={-6} className="w-56">
+          <DropdownMenuItem onClick={toggleTapeMeasure} className="cursor-pointer">
+            <Ruler className="w-4 h-4 mr-2" />
+            <span>Regla</span>
+            {showTapeMeasure && <span className="ml-auto text-xs text-muted-foreground">Activo</span>}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={toggleGridVisible} className="cursor-pointer">
+            <Grid className="w-4 h-4 mr-2" />
+            <span>Activar/desactivar cuadrícula</span>
+            {gridVisible && <span className="ml-auto text-xs text-muted-foreground">Activo</span>}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={(e) => handleToggleTheme(e)} className="cursor-pointer">
+            {theme === 'dark' ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
+            <span>Modo {theme === 'dark' ? 'claro' : 'oscuro'}</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleExport} className="cursor-pointer">
+            <ImageIcon className="w-4 h-4 mr-2" />
+            <span>Exportar imagen...</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={clearScene} className="cursor-pointer text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-950">
+            <Trash2 className="w-4 h-4 mr-2" />
+            <span>Limpiar lienzo</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={resetOnboarding} className="cursor-pointer">
+            <HelpCircle className="w-4 h-4 mr-2" />
+            <span>Help & Issues</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       </div>
 
-      {/* Lado Derecho: Controles */}
-      <div className="flex items-center gap-3 pointer-events-auto">
-        {/* Toggle Theme */}
-        <button
-          onClick={handleToggleTheme}
-          className="flex items-center justify-center w-9 h-9 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 rounded-full text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all duration-300 active:scale-95 cursor-pointer backdrop-blur-md"
-          title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          aria-label="Alternar tema"
-        >
-          {theme === 'dark' ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="5"></circle>
-              <line x1="12" y1="1" x2="12" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="23"></line>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-              <line x1="1" y1="12" x2="3" y2="12"></line>
-              <line x1="21" y1="12" x2="23" y2="12"></line>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-            </svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-            </svg>
-          )}
-        </button>
-
-        {/* Exportar */}
-        <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:border-blue-500/50 hover:bg-blue-500/10 hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] rounded-full text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all duration-300 active:scale-95 cursor-pointer backdrop-blur-md"
-          title="Exportar escena como JPEG"
-          aria-label="Exportar escena como JPEG"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span className="hidden md:inline">Exportar Escena</span>
-        </button>
+      {/* Componente tipográfico principal superpuesto en la interfaz */}
+      <div className="pointer-events-auto flex flex-col drop-shadow-md">
+        <h1 className="text-sm font-bold tracking-widest text-foreground uppercase font-serif">
+          Campo Eléctrico 3D
+        </h1>
+        <span className="text-[9px] text-primary font-serif tracking-widest font-semibold uppercase leading-none mt-0.5">
+          Simulador de Cargas
+        </span>
       </div>
     </header>
   );

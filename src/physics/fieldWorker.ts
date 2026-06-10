@@ -29,9 +29,7 @@ workerScope.onmessage = (e: MessageEvent<WorkerInput>) => {
   const { charges, resolution, limits, center } = e.data;
   console.log("Worker input:", { charges, resolution, limits, center });
 
-  // Validación de seguridad para evitar cálculos vacíos
   if (!charges || charges.length === 0) {
-    console.log("Worker: charges is empty, returning empty buffers");
     self.postMessage({
       positions: new Float32Array(0),
       normals: new Float32Array(0),
@@ -41,26 +39,24 @@ workerScope.onmessage = (e: MessageEvent<WorkerInput>) => {
   }
 
   if (!marchingCubes || marchingCubes.resolution !== resolution) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     marchingCubes = new MarchingCubes(resolution, { flatShading: false } as any, false, false, 800000);
   }
 
   marchingCubes.reset();
 
-  // 1. Rellenar el campo escalar con el potencial eléctrico optimizado
   const SOFTENING = 1e-10;
   const ke = 8.98755e9;
 
-  // Precomputar kq (Coulomb * carga en Coulombs) para evitar conversiones en el bucle interno
   const precomputedCharges = charges.map((c) => ({
     x: c.position[0],
     y: c.position[1],
     z: c.position[2],
-    kq: ke * (c.value * 1e-9) // Convertir nC a C y multiplicar por ke
+    kq: ke * (c.value * 1e-9)
   }));
 
   const halfRes = resolution / 2;
   for (let z = 0; z < resolution; z++) {
-    // Mapeo simétrico de coordenadas que coincide exactamente con el espacio [-1, 1] local del Mesh
     const pz = (z / halfRes - 1) * limits + center[2];
     for (let y = 0; y < resolution; y++) {
       const py = (y / halfRes - 1) * limits + center[1];
@@ -82,22 +78,18 @@ workerScope.onmessage = (e: MessageEvent<WorkerInput>) => {
     }
   }
 
-  // 2. Calcular niveles de aislamiento adaptativos basados en las cargas
-  //    Para una carga puntual: V = ke * q / r → r = ke * q / V
-  //    Queremos superficies a radios visibles: ~0.8, ~1.5, ~3.0 unidades del centro
   const maxAbsQ = Math.max(...charges.map((c) => Math.abs(c.value * 1e-9)));
+  const maxV_estimated = (ke * maxAbsQ) / 0.4;
   
-  // Niveles de potencial que producen esferas de radio razonable
-  const targetRadii = [0.8, 1.5, 3.0]; // Radios deseados en unidades de la escena
+  const numLayers = 15; // Configura la volumetría a 15 capas para incrementar la densidad visual
+  const deltaV = maxV_estimated / numLayers;
+  
   const isolations: number[] = [];
-  
-  for (const r of targetRadii) {
-    const isoVal = ke * maxAbsQ / r;
-    isolations.push(isoVal);   // Positivo (cargas +)
-    isolations.push(-isoVal);  // Negativo (cargas -)
+  for (let i = 1; i <= numLayers; i++) {
+    isolations.push(i * deltaV);
+    isolations.push(-i * deltaV);
   }
 
-  // 3. Extraer isosuperficies para cada nivel
   const allPositions: number[] = [];
   const allNormals: number[] = [];
   const allColors: number[] = [];
@@ -112,11 +104,8 @@ workerScope.onmessage = (e: MessageEvent<WorkerInput>) => {
     const posArray = marchingCubes.geometry.attributes.position.array;
     const normArray = marchingCubes.geometry.attributes.normal.array;
 
-    // Color: rojo para potencial positivo, azul para negativo
-    // Intensidad variable según la cercanía al campo (capas internas más brillantes)
     const absIso = Math.abs(iso);
-    const maxIso = ke * maxAbsQ / targetRadii[0];
-    const intensity = 0.4 + 0.6 * (absIso / maxIso); // 0.4 a 1.0
+    const intensity = 0.3 + 0.7 * (absIso / maxV_estimated);
 
     const r = iso > 0 ? 0.9 * intensity : 0.15;
     const g = 0.15;
@@ -129,16 +118,9 @@ workerScope.onmessage = (e: MessageEvent<WorkerInput>) => {
     }
   }
 
-  // 4. Transferir buffers al hilo principal
   const positions = new Float32Array(allPositions);
   const normals = new Float32Array(allNormals);
   const colors = new Float32Array(allColors);
-
-  console.log("Worker output generated:", {
-    positions: positions.length,
-    normals: normals.length,
-    colors: colors.length
-  });
 
   workerScope.postMessage(
     { positions, normals, colors },

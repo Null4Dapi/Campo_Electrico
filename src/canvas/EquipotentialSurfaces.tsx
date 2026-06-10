@@ -14,7 +14,7 @@ export const EquipotentialSurfaces = memo(function EquipotentialSurfaces() {
     colors: Float32Array;
   } | null>(null);
 
-  // Guardar datos dinámicos de transformación
+  // Almacena datos dinámicos de transformación
   const [transform, setTransform] = useState<{
     center: [number, number, number];
     limits: number;
@@ -26,7 +26,7 @@ export const EquipotentialSurfaces = memo(function EquipotentialSurfaces() {
   const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
-    // Instanciar el Web Worker usando Vite
+    // Instancia el Web Worker para procesamiento asíncrono
     const worker = new FieldWorker();
     workerRef.current = worker;
 
@@ -51,27 +51,33 @@ export const EquipotentialSurfaces = memo(function EquipotentialSurfaces() {
       return;
     }
 
-    // Mapear cargas a signed values (valor real físico)
-    const chargesData = charges.map((c) => ({
+    // Mapea las cargas a sus valores físicos reales, excluyendo las de prueba
+    const validCharges = charges.filter((c) => c.type !== 'test');
+    if (validCharges.length === 0) {
+      setGeometryData(null);
+      return;
+    }
+    
+    const chargesData = validCharges.map((c) => ({
       position: c.position,
       value: c.type === 'positive' ? c.value : -c.value,
     }));
 
-    // Resolución: 16 durante arrastre (interactividad rápida, 60fps), 32 en reposo (alta calidad)
+    // Adapta la resolución de la malla dependiendo del estado de la interacción
     const resolution = isDragging ? 16 : 32;
 
-    // Calcular límites y centro de la escena de manera dinámica
+    // Computa dinámicamente el centro y los límites volumétricos de la escena
     let minX = -5, maxX = 5;
     let minY = -3, maxY = 3;
     let minZ = -5, maxZ = 5;
 
-    if (charges.length > 0) {
-      minX = Math.min(...charges.map(c => c.position[0])) - 4;
-      maxX = Math.max(...charges.map(c => c.position[0])) + 4;
-      minY = -4; // Grosor vertical para evaluar el volumen
+    if (validCharges.length > 0) {
+      minX = Math.min(...validCharges.map(c => c.position[0])) - 4;
+      maxX = Math.max(...validCharges.map(c => c.position[0])) + 4;
+      minY = -4; // Fija el límite inferior vertical para la evaluación del volumen
       maxY = 4;
-      minZ = Math.min(...charges.map(c => c.position[2])) - 4;
-      maxZ = Math.max(...charges.map(c => c.position[2])) + 4;
+      minZ = Math.min(...validCharges.map(c => c.position[2])) - 4;
+      maxZ = Math.max(...validCharges.map(c => c.position[2])) + 4;
     }
 
     const centerX = (minX + maxX) / 2;

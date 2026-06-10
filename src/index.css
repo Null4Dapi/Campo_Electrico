@@ -128,6 +128,7 @@
 }
 
 :root {
+  color-scheme: light;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
   --card: oklch(1 0 0);
@@ -163,37 +164,38 @@
 }
 
 .dark {
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.47 0.157 37.304);
-  --primary-foreground: oklch(0.98 0.016 73.684);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.553 0.013 58.071);
+  color-scheme: dark;
+  --background: oklch(0.13 0.01 250); /* Dark elegant slate/blue */
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.16 0.01 250);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.16 0.01 250);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.75 0.15 255); /* Premium soft blue, excellent contrast */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.2 0.02 250);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.2 0.02 250);
+  --muted-foreground: oklch(0.65 0.01 250);
+  --accent: oklch(0.2 0.02 250);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(0.25 0.02 250);
+  --input: oklch(0.25 0.02 250);
+  --ring: oklch(0.75 0.15 255);
   --chart-1: oklch(0.837 0.128 66.29);
   --chart-2: oklch(0.705 0.213 47.604);
   --chart-3: oklch(0.646 0.222 41.116);
   --chart-4: oklch(0.553 0.195 38.402);
   --chart-5: oklch(0.47 0.157 37.304);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.705 0.213 47.604);
-  --sidebar-primary-foreground: oklch(0.98 0.016 73.684);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+  --sidebar: oklch(0.16 0.01 250);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.75 0.15 255);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.2 0.02 250);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.25 0.02 250);
+  --sidebar-ring: oklch(0.75 0.15 255);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -205,6 +207,7 @@
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+  display: block;
 }
 
 /* La snapshot antigua permanece fija en su lugar */
@@ -215,7 +218,7 @@
 /* La snapshot nueva se revela con clip-path circular */
 ::view-transition-new(root) {
   z-index: 9999;
-  animation: circularReveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: circularReveal 0.5s ease-in-out forwards;
 }
 
 @keyframes circularReveal {
@@ -233,4 +236,49 @@
   ::view-transition-new(root) {
     animation: none !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Excalidraw / Layout Minimalista (UI Layer & Glass Panels)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@utility glass-panel {
+  background-color: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  border-radius: var(--radius);
+}
+
+@utility glass-panel-floating {
+  isolation: isolate;
+  transform: translateZ(0);
+  background-color: oklch(from var(--background) l c h / 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(from var(--border) l c h / 0.5);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  border-radius: var(--radius);
+  
+  .dark & {
+    background-color: oklch(from var(--background) l c h / 0.55);
+    border: 1px solid oklch(1 0 0 / 0.08); /* Borde sutil blanco al 8% */
+    border-top-color: oklch(1 0 0 / 0.15); /* Efecto de luz superior */
+    box-shadow: 0 10px 30px -5px rgb(0 0 0 / 0.6); /* Sombra intensa para destacar */
+  }
+}
+
+@utility layer-ui-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  padding: 1rem; /* Safe area base */
+  @media (min-width: 768px) {
+    padding: 1.5rem;
+  }
+}
+
+/* Restaura los eventos de puntero a los hijos */
+@utility layer-ui-wrapper-children {
+  pointer-events: auto;
 }

@@ -6,10 +6,10 @@ import { calculateElectricField, calculateElectricPotential } from '../physics/c
 
 const STEPS = 400;
 const STEP_SIZE = 0.15;
-const MIN_DIST = 0.5; // Radio de la carga
-const NUM_LINES_PER_CHARGE = 32; // Cantidad de líneas en 3D
+const MIN_DIST = 0.25; // Define el radio de la carga
+const NUM_LINES_PER_CHARGE = 32; // Define la cantidad de líneas espaciales a procesar
 
-// Colores pre-alocados y reutilizables (evitar GC pressure)
+// Preasigna instancias de colores para mitigar la carga del recolector de basura
 const darkNeutral = new Color('#121214');
 const positiveColor = new Color('#ef4444');
 const negativeColor = new Color('#3b82f6');
@@ -29,10 +29,10 @@ export const FieldArrows = memo(function FieldArrows() {
   const dummy = useMemo(() => new Object3D(), []);
   const baseUp = useMemo(() => new Vector3(0, 1, 0), []);
 
-  // Cache para dirty-checking: solo recalcular cuando charges cambie
+  // Almacena variables de estado previo para evaluar recálculos
   const prevChargesRef = useRef<string>('');
   const prevShowRef = useRef(true);
-  // Cache de buffers pre-alocados para reutilizar entre frames
+  // Mantiene referencias a búferes de memoria para su reutilización entre fotogramas
   const posAttrRef = useRef<Float32BufferAttribute | null>(null);
   const colAttrRef = useRef<Float32BufferAttribute | null>(null);
 
@@ -41,10 +41,10 @@ export const FieldArrows = memo(function FieldArrows() {
     const lines = linesRef.current;
     if (!lines || !arrowsMesh) return;
 
-    // Si no se muestran las líneas, limpiar y salir
+    // Limpia la geometría y detiene la ejecución si las líneas están ocultas
     if (!showFieldLines) {
       if (prevShowRef.current) {
-        // Acabamos de ocultar: limpiar geometría
+        // Vacía la geometría al cambiar a estado oculto
         const emptyPos = new Float32Array(0);
         const emptyCol = new Float32Array(0);
         lines.geometry.setAttribute('position', new Float32BufferAttribute(emptyPos, 3));
@@ -61,21 +61,23 @@ export const FieldArrows = memo(function FieldArrows() {
     }
     prevShowRef.current = true;
 
-    // Dirty check: serializar posiciones y valores de cargas para comparar
+    // Serializa los atributos espaciales y de carga para identificar variaciones
     const chargesKey = charges.map(c => 
       `${c.id}:${c.position[0].toFixed(4)},${c.position[1].toFixed(4)},${c.position[2].toFixed(4)},${c.value},${c.type}`
     ).join('|');
 
     if (chargesKey === prevChargesRef.current) {
-      return; // Nada cambió, saltar recálculo
+      return; // Omite el cálculo si no se detectan variaciones
     }
     prevChargesRef.current = chargesKey;
 
-    // Mapear cargas (solo cuando hay cambios)
-    const chargesData = charges.map(c => ({
+    // Extrae las fuentes de campo, omitiendo las cargas de prueba para preservar la simulación
+    const chargesData = charges
+      .filter(c => c.type !== 'test')
+      .map(c => ({
       id: c.id,
       position: c.position,
-      value: c.type === 'positive' ? c.value : -c.value,
+      value: c.value,
       type: c.type
     }));
 
@@ -85,10 +87,10 @@ export const FieldArrows = memo(function FieldArrows() {
 
     chargesData.forEach(sourceCharge => {
       const isPos = sourceCharge.type === 'positive';
-      const phi = Math.PI * (3 - Math.sqrt(5)); // Ángulo dorado para la esfera de Fibonacci
+      const phi = Math.PI * (3 - Math.sqrt(5)); // Aplica el ángulo dorado requerido por el algoritmo esférico de Fibonacci
 
       for (let i = 0; i < NUM_LINES_PER_CHARGE; i++) {
-        // Distribución de puntos de inicio en 3D usando Esfera de Fibonacci
+        // Distribuye de manera uniforme los puntos de inicio aplicando una esfera de Fibonacci
         const y = 1 - (i / (NUM_LINES_PER_CHARGE - 1)) * 2;
         const radius = Math.sqrt(1 - y * y);
         const theta = phi * i;
@@ -110,7 +112,7 @@ export const FieldArrows = memo(function FieldArrows() {
         let discardLine = false;
         
         for (let step = 0; step < STEPS; step++) {
-          // Heun's Method (RK2) - Paso 1
+          // Ejecuta el paso inicial del método de Heun (Runge-Kutta de orden 2)
           const { direction: dir1, magnitude } = calculateElectricField(
             [currentX, currentY, currentZ], 
             chargesData
@@ -123,12 +125,12 @@ export const FieldArrows = memo(function FieldArrows() {
           const stepY1 = dir1[1] * sign * STEP_SIZE;
           const stepZ1 = dir1[2] * sign * STEP_SIZE;
           
-          // Predicción Euler
+          // Genera una predicción posicional mediante el método de Euler
           const predX = currentX + stepX1;
           const predY = currentY + stepY1;
           const predZ = currentZ + stepZ1;
           
-          // Paso 2: dirección en posición predicha
+          // Evalúa el campo vectorial en la posición proyectada
           const { direction: dir2 } = calculateElectricField(
             [predX, predY, predZ],
             chargesData
@@ -138,7 +140,7 @@ export const FieldArrows = memo(function FieldArrows() {
           const stepY2 = dir2[1] * sign * STEP_SIZE;
           const stepZ2 = dir2[2] * sign * STEP_SIZE;
           
-          // Paso corregido promedio
+          // Estima la trayectoria resultante mediante promediado
           const vx = 0.5 * (stepX1 + stepX2);
           const vy = 0.5 * (stepY1 + stepY2);
           const vz = 0.5 * (stepZ1 + stepZ2);
@@ -150,26 +152,26 @@ export const FieldArrows = memo(function FieldArrows() {
           tempPositions.push(currentX, currentY, currentZ);
           tempPositions.push(nextX, nextY, nextZ);
           
-          // Calcular potencial en el punto medio del segmento
+          // Determina el potencial eléctrico evaluado en el punto medio del segmento trazado
           const midX = (currentX + nextX) / 2;
           const midY = (currentY + nextY) / 2;
           const midZ = (currentZ + nextZ) / 2;
           const V = calculateElectricPotential([midX, midY, midZ], chargesData);
           
-          // Mapear potencial a gradiente: Azul -> Violeta -> Rojo (usando colores pre-alocados)
+          // Mapea la lectura de potencial a un gradiente de color espectral
           const V_norm = Math.tanh(V / 8.0);
           const s = (V_norm + 1) / 2;
           
           tempColorGrad.lerpColors(negativeColor, positiveColor, s);
           
-          // Desvanecer hacia darkNeutral para zonas con campo E débil
+          // Mezcla el color resultante con una tonalidad oscura de acuerdo con la caída de intensidad del campo
           const E_norm = Math.tanh(magnitude / 6.0);
           tempColorFinal.lerpColors(darkNeutral, tempColorGrad, E_norm);
           
           tempColors.push(tempColorFinal.r, tempColorFinal.g, tempColorFinal.b);
           tempColors.push(tempColorFinal.r, tempColorFinal.g, tempColorFinal.b);
           
-          // Cada cierta cantidad de pasos, colocamos una flecha (cono)
+          // Intercala indicadores direccionales a intervalos definidos a lo largo de la trayectoria
           if (step % 40 === 20) {
             tempArrows.push({
               pos: [nextX, nextY, nextZ],
@@ -187,16 +189,16 @@ export const FieldArrows = memo(function FieldArrows() {
             const dz = nextZ - c.position[2];
             const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
             
-            if (dist <= 0.55) {
+            if (dist <= 0.3) {
               hit = true;
               
               if (!isPos && c.type === 'positive') {
                 discardLine = true;
               }
               
-              // Ajustar último punto para terminar en la superficie (0.5 m)
+              // Trunca la trayectoria en el radio exterior del volumen de influencia de la carga
               if (dist > 0) {
-                const ratio = 0.5 / dist;
+                const ratio = 0.25 / dist;
                 const finalX = c.position[0] + dx * ratio;
                 const finalY = c.position[1] + dy * ratio;
                 const finalZ = c.position[2] + dz * ratio;
@@ -236,7 +238,7 @@ export const FieldArrows = memo(function FieldArrows() {
               
               tempArrowColorGrad.lerpColors(negativeColor, positiveColor, s);
               
-              // Atenuar flechas según el campo local
+              // Regula la intensidad de los indicadores vectoriales basada en la magnitud de campo local
               const { magnitude: arrowE } = calculateElectricField(arr.pos, chargesData);
               const E_norm = Math.tanh(arrowE / 6.0);
               tempArrowColorFinal.lerpColors(darkNeutral, tempArrowColorGrad, E_norm);
@@ -249,7 +251,7 @@ export const FieldArrows = memo(function FieldArrows() {
       }
     });
 
-    // Ocultar flechas no usadas
+    // Suprime las flechas remanentes no actualizadas
     for (let i = arrowIndex; i < arrowsMesh.count; i++) {
       dummy.scale.setScalar(0);
       dummy.updateMatrix();
@@ -261,7 +263,7 @@ export const FieldArrows = memo(function FieldArrows() {
       arrowsMesh.instanceColor.needsUpdate = true;
     }
 
-    // Actualizar geometría de líneas reutilizando buffers cuando sea posible
+    // Transmite los datos vectoriales a la geometría reciclando memoria siempre que sea posible
     const posArray = new Float32Array(linePositions);
     const colArray = new Float32Array(lineColors);
     
@@ -269,13 +271,13 @@ export const FieldArrows = memo(function FieldArrows() {
     const existingPosAttr = posAttrRef.current;
     
     if (existingPosAttr && existingPosAttr.count === posArray.length / 3) {
-      // Mismo tamaño: reutilizar buffer existente
+      // Modifica los datos del búfer directamente en caso de coincidencia estructural
       existingPosAttr.set(posArray);
       existingPosAttr.needsUpdate = true;
       colAttrRef.current!.set(colArray);
       colAttrRef.current!.needsUpdate = true;
     } else {
-      // Tamaño diferente: crear nuevos buffers
+      // Reasigna memoria con una nueva instancia en caso de disparidad de tamaño
       const newPosAttr = new Float32BufferAttribute(posArray, 3);
       const newColAttr = new Float32BufferAttribute(colArray, 3);
       geom.setAttribute('position', newPosAttr);

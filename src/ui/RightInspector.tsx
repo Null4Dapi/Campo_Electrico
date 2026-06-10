@@ -1,5 +1,8 @@
 import { memo } from 'react';
 import { useSimulatorStore } from '../store/useSimulatorStore';
+import { calculateForceAndEnergy } from '../physics/calculus';
+import { motion } from 'framer-motion';
+import { Trash2 } from 'lucide-react';
 
 export const RightInspector = memo(function RightInspector() {
   const selectedCharge = useSimulatorStore((state) => state.charges.find((c) => c.id === state.selectedChargeId));
@@ -9,6 +12,7 @@ export const RightInspector = memo(function RightInspector() {
   const removeCharge = useSimulatorStore((state) => state.removeCharge);
   const toggleInspectorMinimized = useSimulatorStore((state) => state.toggleInspectorMinimized);
   const setInspectorMinimized = useSimulatorStore((state) => state.setInspectorMinimized);
+  const allCharges = useSimulatorStore((state) => state.charges);
 
   if (!selectedCharge) return null;
 
@@ -35,236 +39,209 @@ export const RightInspector = memo(function RightInspector() {
   };
 
   const isPositive = selectedCharge.type === 'positive';
+  const isTest = selectedCharge.type === 'test';
+
+  // Calcula métricas relativas al campo eléctrico evaluadas en la posición de la partícula sensora
+  let testData = null;
+  if (isTest) {
+    testData = calculateForceAndEnergy(selectedCharge.position, selectedCharge.value, allCharges);
+  }
+
+  if (isInspectorMinimized) {
+    return (
+      <div className="pointer-events-auto glass-panel-floating flex items-center justify-center p-1.5">
+        <button
+          onClick={toggleInspectorMinimized}
+          className="flex items-center justify-center w-8 h-8 rounded-[calc(var(--radius)-4px)] text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all duration-200 active:scale-95 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          title="Abrir Propiedades"
+          aria-label="Alternar Panel de Propiedades"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="absolute top-[80px] right-4 lg:right-6 z-30 pointer-events-auto flex flex-col items-end gap-2.5 max-w-[calc(100vw-2rem)]">
-      
-      {/* Botón Disparador Sutil (Gear Icon) */}
-      <button
-        onClick={toggleInspectorMinimized}
-        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-300 cursor-pointer active:scale-95 border ${
-          !isInspectorMinimized
-            ? 'bg-purple-500/20 text-purple-600 dark:text-purple-400 border-purple-500/35 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-            : 'bg-white/80 dark:bg-zinc-950/80 text-zinc-500 dark:text-zinc-400 border-black/10 dark:border-white/10 hover:text-zinc-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 hover:border-black/20 dark:hover:border-white/20 shadow-md'
-        }`}
-        title={!isInspectorMinimized ? 'Cerrar Propiedades' : 'Abrir Propiedades'}
-        aria-label="Alternar Panel de Propiedades"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="transition-transform duration-500 hover:rotate-45"
-        >
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-      </button>
+    <motion.div 
+      initial={{ x: -50, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+      className="glass-panel-floating pointer-events-auto w-[280px] p-4 flex flex-col gap-4 text-foreground z-30 max-h-full overflow-y-auto"
+    >
+      {/* Encabezado del panel de propiedades */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+            <circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle>
+          </svg>
+          <span className="text-xs uppercase tracking-widest font-bold">Propiedades</span>
+        </div>
+        <div className="flex items-center gap-1">
+          {/* Acción para eliminar el elemento seleccionado */}
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { selectCharge(null); removeCharge(selectedCharge.id); }}
+            className="text-muted-foreground hover:text-destructive p-1.5 hover:bg-destructive/10 rounded-full transition-colors cursor-pointer"
+            title="Eliminar Carga"
+          >
+            <Trash2 className="w-4 h-4" />
+          </motion.button>
 
-      {/* Panel Desplegable (Compacto, Sutil y Responsivo) */}
-      {!isInspectorMinimized && (
-        <div className="w-[280px] sm:w-[320px] max-w-full relative border border-black/10 dark:border-white/10 p-5 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] text-zinc-900 dark:text-white flex flex-col gap-5 transition-colors duration-300 animate-in fade-in slide-in-from-top-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
-          {/* Background blur layer */}
-          <div className="absolute inset-0 bg-white/85 dark:bg-zinc-950/85 backdrop-blur-xl rounded-2xl -z-10 pointer-events-none" />
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400">
-                <circle cx="12" cy="12" r="10"></circle>
-                <circle cx="12" cy="12" r="6"></circle>
-                <circle cx="12" cy="12" r="2"></circle>
-              </svg>
-              <span className="text-xs text-zinc-800 dark:text-zinc-100 uppercase tracking-widest font-bold">Propiedades</span>
-            </div>
-            
-            <button 
-              onClick={() => setInspectorMinimized(true)}
-              className="text-zinc-500 hover:text-zinc-900 dark:hover:text-white p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors cursor-pointer group"
-              title="Minimizar"
-              aria-label="Minimizar"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:rotate-90">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
+          <button 
+            onClick={() => setInspectorMinimized(true)}
+            className="text-muted-foreground hover:text-foreground p-1.5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors cursor-pointer group"
+            title="Minimizar"
+            aria-label="Minimizar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:rotate-90">
+              <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
 
-          {/* Badge de tipo de carga */}
-          <div className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl border transition-colors duration-300 ${
-            isPositive 
-              ? 'bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
-              : 'bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
-          }`}>
-            <div className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor] transition-colors duration-300 ${isPositive ? 'bg-red-500 text-red-500' : 'bg-blue-500 text-blue-500'}`} />
-            <span className={`text-[13px] font-bold tracking-wide transition-colors duration-300 ${isPositive ? 'text-red-400' : 'text-blue-400'}`}>
-              {isPositive ? 'Carga Positiva (+)' : 'Carga Negativa (−)'}
-            </span>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            {/* Posición X */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <label htmlFor="coord-x">Coordenada X</label>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
-                  <input
-                    type="number"
-                    id="coord-x"
-                    name="coord-x"
-                    step="0.1"
-                    value={Number(selectedCharge.position[0].toFixed(2))}
-                    onChange={(e) => handlePositionChange('x', e.target.value)}
-                    className="w-14 bg-transparent text-right font-mono text-xs text-zinc-900 dark:text-white focus:outline-none"
-                  />
-                  <span className="text-zinc-500 text-xs font-mono">m</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="-10"
-                max="10"
-                step="0.1"
-                value={selectedCharge.position[0]}
-                onChange={(e) => handlePositionChange('x', e.target.value)}
-                aria-label="Coordenada X"
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
-              />
-            </div>
-
-            {/* Posición Y */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <label htmlFor="coord-y">Coordenada Y</label>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
-                  <input
-                    type="number"
-                    id="coord-y"
-                    name="coord-y"
-                    step="0.1"
-                    value={Number(selectedCharge.position[1].toFixed(2))}
-                    onChange={(e) => handlePositionChange('y', e.target.value)}
-                    className="w-14 bg-transparent text-right font-mono text-xs text-zinc-900 dark:text-white focus:outline-none"
-                  />
-                  <span className="text-zinc-500 text-xs font-mono">m</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="-10"
-                max="10"
-                step="0.1"
-                value={selectedCharge.position[1]}
-                onChange={(e) => handlePositionChange('y', e.target.value)}
-                aria-label="Coordenada Y"
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
-              />
-            </div>
-
-            {/* Posición Z */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <label htmlFor="coord-z">Coordenada Z</label>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
-                  <input
-                    type="number"
-                    id="coord-z"
-                    name="coord-z"
-                    step="0.1"
-                    value={Number(selectedCharge.position[2].toFixed(2))}
-                    onChange={(e) => handlePositionChange('z', e.target.value)}
-                    className="w-14 bg-transparent text-right font-mono text-xs text-zinc-900 dark:text-white focus:outline-none"
-                  />
-                  <span className="text-zinc-500 text-xs font-mono">m</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="-10"
-                max="10"
-                step="0.1"
-                value={selectedCharge.position[2]}
-                onChange={(e) => handlePositionChange('z', e.target.value)}
-                aria-label="Coordenada Z"
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
-              />
-            </div>
-
-            {/* Valor de Carga */}
-            <div className="flex flex-col gap-2.5">
-              <div className="flex justify-between items-center text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                <label htmlFor="magnitude">Magnitud |Q|</label>
-                <div className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-black/10 dark:border-white/10 rounded-lg px-2 py-1 focus-within:border-black/30 dark:focus-within:border-white/30 focus-within:ring-1 focus-within:ring-black/10 dark:focus-within:ring-white/10 transition-colors">
-                  <input
-                    type="number"
-                    id="magnitude"
-                    name="magnitude"
-                    min="0.1"
-                    step="0.1"
-                    value={selectedCharge.value}
-                    onChange={(e) => handleValueChange(e.target.value)}
-                    className="w-14 bg-transparent text-right font-mono text-xs text-zinc-900 dark:text-white focus:outline-none"
-                  />
-                  <span className="text-zinc-500 text-xs font-mono">nC</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="0.1"
-                max="10"
-                step="0.1"
-                value={selectedCharge.value}
-                onChange={(e) => handleValueChange(e.target.value)}
-                aria-label="Magnitud"
-                className="w-full h-1.5 bg-zinc-300 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-zinc-900 dark:accent-white hover:accent-zinc-700 dark:hover:accent-zinc-300 transition-colors"
-              />
-            </div>
-          </div>
-
-          <div className="h-px bg-gradient-to-r from-transparent via-black/10 dark:via-white/10 to-transparent my-1" />
-
-          <div className="flex flex-col gap-3">
-            {/* Invertir Polaridad */}
-            <button
-              onClick={togglePolarity}
-              className={`w-full py-2.5 rounded-xl text-[13px] font-semibold border transition-colors duration-300 cursor-pointer flex items-center justify-center gap-2 ${
-                isPositive 
-                  ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:border-blue-500/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
-                  : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(239,68,68,0.2)]'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M8 3 4 7l4 4"></path>
-                <path d="M4 7h16"></path>
-                <path d="m16 21 4-4-4-4"></path>
-                <path d="M20 17H4"></path>
-              </svg>
-              Cambiar a {isPositive ? 'Carga Negativa (−)' : 'Carga Positiva (+)'}
-            </button>
-
-            {/* Eliminar Carga */}
-            <button
-              onClick={() => {
-                selectCharge(null);
-                removeCharge(selectedCharge.id);
-              }}
-              className="w-full py-2.5 rounded-xl bg-red-500/10 dark:bg-red-950/30 border border-red-500/20 text-red-600 dark:text-red-400 text-[13px] font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white hover:border-red-500 hover:shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-colors duration-300 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18"></path>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-              </svg>
-              Eliminar Carga
-            </button>
-          </div>
+      {/* Controlador de segmentación para alternar polaridad */}
+      {!isTest ? (
+        <div className="relative flex items-center bg-black/5 dark:bg-white/5 rounded-lg p-1">
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { if (!isPositive) togglePolarity(); }}
+            className={`relative z-10 flex-1 py-1.5 text-[13px] font-semibold rounded-md transition-colors ${isPositive ? 'text-white' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Positiva (+)
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { if (isPositive) togglePolarity(); }}
+            className={`relative z-10 flex-1 py-1.5 text-[13px] font-semibold rounded-md transition-colors ${!isPositive ? 'text-white' : 'text-muted-foreground hover:text-foreground'}`}
+          >
+            Negativa (−)
+          </motion.button>
+          {/* Indicador visual deslizante */}
+          <motion.div
+            className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-md shadow-sm ${isPositive ? 'bg-red-500 left-1' : 'bg-blue-500 left-[calc(50%+2px)]'}`}
+            layout
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          />
+        </div>
+      ) : (
+        <div className="flex items-center justify-center py-2 bg-green-500/10 border border-green-500/20 rounded-lg text-green-500 text-[13px] font-semibold shadow-sm">
+          Sensor de Prueba (q₀)
         </div>
       )}
-    </div>
+
+      <div className="flex flex-col gap-4 mt-2 pb-2">
+        {/* Modificador posicional en el eje X */}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex justify-between items-center text-[13px] font-medium text-foreground">
+            <label htmlFor="coord-x">Coordenada X</label>
+            <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-border rounded-lg px-2 py-1 focus-within:border-primary transition-colors">
+              <input
+                type="number" id="coord-x" name="coord-x" step="0.1"
+                value={Number(selectedCharge.position[0].toFixed(2))}
+                onChange={(e) => handlePositionChange('x', e.target.value)}
+                className="w-14 bg-transparent text-right font-mono text-xs text-foreground focus:outline-none"
+              />
+              <span className="text-muted-foreground text-xs font-mono">m</span>
+            </motion.div>
+          </div>
+          <motion.input
+            whileHover={{ scale: 1.02 }}
+            type="range" min="-10" max="10" step="0.1" value={selectedCharge.position[0]}
+            onChange={(e) => handlePositionChange('x', e.target.value)}
+            className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary transition-colors"
+          />
+        </div>
+
+        {/* Modificador posicional en el eje Y */}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex justify-between items-center text-[13px] font-medium text-foreground">
+            <label htmlFor="coord-y">Coordenada Y</label>
+            <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-border rounded-lg px-2 py-1 focus-within:border-primary transition-colors">
+              <input
+                type="number" id="coord-y" name="coord-y" step="0.1"
+                value={Number(selectedCharge.position[1].toFixed(2))}
+                onChange={(e) => handlePositionChange('y', e.target.value)}
+                className="w-14 bg-transparent text-right font-mono text-xs text-foreground focus:outline-none"
+              />
+              <span className="text-muted-foreground text-xs font-mono">m</span>
+            </motion.div>
+          </div>
+          <motion.input
+            whileHover={{ scale: 1.02 }}
+            type="range" min="-10" max="10" step="0.1" value={selectedCharge.position[1]}
+            onChange={(e) => handlePositionChange('y', e.target.value)}
+            className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary transition-colors"
+          />
+        </div>
+
+        {/* Modificador posicional en el eje Z */}
+        <div className="flex flex-col gap-2.5">
+          <div className="flex justify-between items-center text-[13px] font-medium text-foreground">
+            <label htmlFor="coord-z">Coordenada Z</label>
+            <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-border rounded-lg px-2 py-1 focus-within:border-primary transition-colors">
+              <input
+                type="number" id="coord-z" name="coord-z" step="0.1"
+                value={Number(selectedCharge.position[2].toFixed(2))}
+                onChange={(e) => handlePositionChange('z', e.target.value)}
+                className="w-14 bg-transparent text-right font-mono text-xs text-foreground focus:outline-none"
+              />
+              <span className="text-muted-foreground text-xs font-mono">m</span>
+            </motion.div>
+          </div>
+          <motion.input
+            whileHover={{ scale: 1.02 }}
+            type="range" min="-10" max="10" step="0.1" value={selectedCharge.position[2]}
+            onChange={(e) => handlePositionChange('z', e.target.value)}
+            className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary transition-colors"
+          />
+        </div>
+
+        {/* Control paramétrico para magnitud de la fuente */}
+        {!isTest && (
+          <div className="flex flex-col gap-2.5">
+            <div className="flex justify-between items-center text-[13px] font-medium text-foreground">
+              <label htmlFor="magnitude">Magnitud |Q|</label>
+              <motion.div whileHover={{ scale: 1.05 }} className="flex items-center gap-1 bg-black/5 dark:bg-zinc-900/80 border border-border rounded-lg px-2 py-1 focus-within:border-primary transition-colors">
+                <input
+                  type="number" id="magnitude" name="magnitude" min="0.1" step="0.1"
+                  value={selectedCharge.value}
+                  onChange={(e) => handleValueChange(e.target.value)}
+                  className="w-14 bg-transparent text-right font-mono text-xs text-foreground focus:outline-none"
+                />
+                <span className="text-muted-foreground text-xs font-mono">nC</span>
+              </motion.div>
+            </div>
+            <motion.input
+              whileHover={{ scale: 1.02 }}
+              type="range" min="0.1" max="10" step="0.1" value={selectedCharge.value}
+              onChange={(e) => handleValueChange(e.target.value)}
+              className="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary transition-colors"
+            />
+          </div>
+        )}
+
+        {/* Panel de lecturas de estado para el sensor electrostático */}
+        {isTest && testData && (
+          <motion.div 
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-3 mt-1 p-3 bg-green-500/5 border border-green-500/20 rounded-[calc(var(--radius)-4px)]"
+          >
+            <h5 className="text-[11px] font-bold text-green-500 uppercase tracking-wider mb-1">Lecturas en tiempo real</h5>
+            <div className="flex justify-between items-center text-sm font-mono">
+              <span className="text-muted-foreground">Potencial (V):</span>
+              <span className="text-foreground font-bold">{testData.potential.toFixed(2)} V</span>
+            </div>
+            <div className="flex justify-between items-center text-sm font-mono">
+              <span className="text-muted-foreground">Campo (E):</span>
+              <span className="text-foreground font-bold">{testData.fieldMagnitude.toExponential(3)} N/C</span>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   );
 });

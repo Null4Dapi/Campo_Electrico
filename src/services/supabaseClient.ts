@@ -6,10 +6,10 @@ export interface ChatMessage {
   session_id: string;
 }
 
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
-export const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 
-// Clave para almacenamiento local de respaldo
+// Define la clave identificadora para la capa de almacenamiento persistente local
 const LOCAL_STORAGE_KEY = 'campo_electrico_chat_history';
 
 const getLocalMessages = (sessionId: string): ChatMessage[] => {

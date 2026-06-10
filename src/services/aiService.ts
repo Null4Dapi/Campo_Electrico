@@ -2,7 +2,7 @@ import { useSimulatorStore } from '../store/useSimulatorStore';
 import type { ChatMessage } from './supabaseClient';
 
 const PROXY_URL = '/api/chat';
-const AI_TIMEOUT_MS = 60_000; // 60 segundos de timeout para la respuesta de IA
+const AI_TIMEOUT_MS = 60_000; // Define el tiempo máximo de espera para la respuesta del servicio de inferencia
 
 const SYSTEM_INSTRUCTION = `Eres un asistente experto en física y electromagnetismo. Tu tarea es ayudar al usuario a comprender los campos eléctricos y a interactuar con el simulador 3D.
 
@@ -120,9 +120,9 @@ export const aiService = {
         return localResponse;
       }
 
-      // El servidor de Vercel maneja la URL real y la API key de forma segura.
+      // El entorno de ejecución abstrae la URL base y gestiona las credenciales de forma segura.
 
-      // Estructurar el historial de conversación para la API de Ollama
+      // Adapta la secuencia de mensajes al formato requerido por la interfaz de inferencia
       const messages = [
         { role: 'system', content: SYSTEM_INSTRUCTION },
         ...history.map(msg => ({
@@ -158,10 +158,10 @@ export const aiService = {
         throw new Error('La respuesta del asistente está vacía.');
       }
 
-      // Procesar acciones de simulación si existen
+      // Ejecuta efectos secundarios sobre la simulación en caso de detectar comandos estructurales
       this.executeSimulatorActions(textResponse);
 
-      // Retornar la respuesta limpia
+      // Retorna el texto generado libre de etiquetas de control estructural
       return textResponse.replace(/<actions>[\s\S]*?<\/actions>/g, '').trim();
 
     } catch (error: unknown) {
